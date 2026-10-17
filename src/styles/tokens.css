@@ -1,0 +1,129 @@
+/*
+ * Design tokens: the single source of truth for every colour, line, radius, shadow and motion value
+ * used by the interface. Components never write a hex value; they use a token, either as a Tailwind
+ * class (bg-panel, text-fg-muted, border-line ...) or as a CSS variable (var(--folder-skills)).
+ *
+ * To re-theme the site, change values here. To add a folder, add one --folder-<id> line.
+ * Colours that Three.js and canvas code need live in features/desk/scene3d/palette.ts; the few
+ * values needed outside the browser (metadata, share image) are mirrored in styles/tokens.ts.
+ */
+
+:root {
+  /* ── Surfaces ─────────────────────────────────────────────────────────── */
+  --bg: #090b0f; /* page */
+  --stage: #140d08; /* the 3D stage, also its loading state */
+  --panel: #0b0d11; /* terminal */
+  --panel-raised: #0d1117; /* details drawer and sheet */
+  --panel-chip: #0b0c0e; /* floating pills over the stage */
+
+  /* ── Text, strongest to quietest ──────────────────────────────────────── */
+  --fg: #f8fafc;
+  --fg-soft: #dbe2ec;
+  --fg-body: #c3cad6;
+  --fg-secondary: #aeb8c6;
+  --fg-muted: #9099a8;
+  --fg-subtle: #8b94a3;
+  --fg-dim: #7b8494;
+  --fg-faint: #6f7d8c;
+  --fg-ghost: #4f5967;
+  --on-accent: #0a0f18; /* dark ink on a bright accent button */
+
+  /* Text over the warm 3D stage */
+  --stage-fg: #a58b6a;
+  --stage-chip-fg: #b9ab94;
+
+  /* ── Interactive and status ───────────────────────────────────────────── */
+  --link: #6fb3ff;
+  --ice: #9cc7ff;
+  --ok: #7ee2a0;
+  --err: #ff8a80;
+
+  /* ── Window chrome (terminal and laptop) ──────────────────────────────── */
+  --window-close: #ff5f57;
+  --window-close-hover: #ff6b63;
+  --window-minimize: #febc2e;
+  --window-zoom: #28c840;
+
+  /* ── Folders: one accent per folder on the desk (the id of the folder is the suffix) ── */
+  --folder-intro: var(--ice);
+  --folder-skills: #e0a93f;
+  --folder-projects: #e2693d;
+  --folder-experience: #8fa04a;
+  --folder-education: #8d72c4;
+  --folder-about: #2f9a96;
+
+  /* ── Brand ────────────────────────────────────────────────────────────── */
+  --brand-from: #7a5cff;
+  --brand-to: #13bfae;
+
+  /* ── Lines, veils and overlays ────────────────────────────────────────── */
+  --line: rgb(255 255 255 / 0.1);
+  --line-soft: rgb(255 255 255 / 0.07);
+  --line-strong: rgb(255 255 255 / 0.2);
+  --veil: rgb(255 255 255 / 0.05);
+  --scrollbar: rgb(255 255 255 / 0.2);
+  --vignette: rgb(0 0 0 / 0.55);
+
+  /* ── Shape ────────────────────────────────────────────────────────────── */
+  --radius-panel: 22px;
+  --radius-card: 16px;
+  --radius-pill: 999px;
+
+  /* ── Depth ────────────────────────────────────────────────────────────── */
+  --shadow-panel: 0 25px 50px -12px rgb(0 0 0 / 0.5);
+
+  /* ── Motion ───────────────────────────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-panel: 0.6s;
+}
+
+/* Tailwind utilities generated from the tokens: bg-panel, text-fg-muted, border-line ... */
+@theme inline {
+  --color-page: var(--bg);
+  --color-stage: var(--stage);
+  --color-panel: var(--panel);
+  --color-panel-raised: var(--panel-raised);
+  --color-panel-chip: var(--panel-chip);
+
+  --color-fg: var(--fg);
+  --color-fg-soft: var(--fg-soft);
+  --color-fg-body: var(--fg-body);
+  --color-fg-secondary: var(--fg-secondary);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-fg-dim: var(--fg-dim);
+  --color-fg-faint: var(--fg-faint);
+  --color-fg-ghost: var(--fg-ghost);
+  --color-on-accent: var(--on-accent);
+  --color-stage-fg: var(--stage-fg);
+  --color-stage-chip-fg: var(--stage-chip-fg);
+
+  --color-link: var(--link);
+  --color-ice: var(--ice);
+  --color-ok: var(--ok);
+  --color-err: var(--err);
+
+  --color-window-close: var(--window-close);
+  --color-window-minimize: var(--window-minimize);
+  --color-window-zoom: var(--window-zoom);
+
+  --color-folder-skills: var(--folder-skills);
+  --color-folder-projects: var(--folder-projects);
+  --color-folder-experience: var(--folder-experience);
+  --color-folder-education: var(--folder-education);
+  --color-folder-about: var(--folder-about);
+
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-line-strong: var(--line-strong);
+  --color-veil: var(--veil);
+
+  --radius-panel: var(--radius-panel);
+  --radius-card: var(--radius-card);
+  --shadow-panel: var(--shadow-panel);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+}

@@ -1,0 +1,63 @@
+import type { FolderInput } from "../../schemas/desk.schema";
+
+export const education: FolderInput = {
+  id: "education",
+  line: "Where I studied and what I took part in.",
+  files: [
+    {
+      name: "bs-software-engineering.md",
+      title: "B.S. Software Engineering",
+      size: "2.2 KB",
+      kind: "DEGREE",
+      meta: "Sir Syed University of Engineering & Technology",
+      desc: "B.S. in Software Engineering with a CGPA of 3.77, placing in the top 1%.",
+      tags: ["CGPA 3.77", "Top 1%", "LAO Bronze Medal"],
+      notes: [
+        "LAO Bronze Medal",
+        "Merit scholarship from the 4th to the 8th semester",
+        "Final year project: Capra Vision, an AI goat breed classifier that earned top innovation scores",
+      ],
+      links: [{ t: "Capra Vision ↗", slug: "capra-behance", url: "https://www.behance.net/gallery/257228885/Capra-Vision-AI-Goat-Breed-Identifier", primary: true }],
+    },
+    {
+      name: "diploma-graphic-web-design.md",
+      title: "Diploma in Graphic & Web Design",
+      size: "1.5 KB",
+      kind: "DIPLOMA",
+      meta: "Arena Multimedia",
+      desc: "Diploma in Graphic & Web Design (GDWD), awarded with Distinction. I completed seven design projects while learning it.",
+      tags: ["Adobe XD", "Illustrator", "Photoshop", "Distinction"],
+      notes: [
+        "Seven projects: visiting card, employee card, letter head, two-fold brochure, magazine, billboard and wall calendar",
+        "Designed in Adobe XD, Illustrator and Photoshop",
+        "The UI/UX design background behind my frontend work",
+        "More of the work from throughout the diploma is on my design portfolio",
+      ],
+      links: [
+        { t: "All diploma work ↗", slug: "diploma-portfolio", url: "https://mukadusjawaidsportfolio.web.app/graphic", primary: true },
+        { t: "Visiting card ↗", slug: "visiting-card", url: "https://www.behance.net/gallery/136190287/VISITING-CARD", primary: false },
+        { t: "Employee card ↗", slug: "employee-card", url: "https://www.behance.net/gallery/136190383/EMPLOYEE-CARD", primary: false },
+        { t: "Letter head ↗", slug: "letter-head", url: "https://www.behance.net/gallery/136190781/LETTER-HEAD", primary: false },
+        { t: "Two-fold brochure ↗", slug: "brochure", url: "https://www.behance.net/gallery/136196803/Two-Fold-Broucher", primary: false },
+        { t: "Magazine ↗", slug: "magazine", url: "https://www.behance.net/gallery/136197023/Magazine", primary: false },
+        { t: "Billboard ↗", slug: "billboard", url: "https://www.behance.net/gallery/136197297/Bill-Board", primary: false },
+        { t: "Wall calendar ↗", slug: "wall-calendar", url: "https://www.behance.net/gallery/136242767/Wall-Calendar", primary: false },
+      ],
+    },
+    {
+      name: "leadership-and-activities.md",
+      title: "Leadership & Activities",
+      size: "1.3 KB",
+      kind: "ACTIVITIES",
+      meta: "2021 · SSUET · IEEE Computer Society",
+      desc: "General Secretary of the IEEE Computer Society in 2021, and General Class Representative at SSUET.",
+      tags: ["Leadership", "IEEE", "MUN"],
+      notes: [
+        "ACR in college",
+        "Model United Nations (MUN)",
+        "A cooking competition and an industrial visit to Siemens",
+      ],
+      links: [],
+    },
+  ],
+};

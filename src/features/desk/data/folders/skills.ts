@@ -1,0 +1,72 @@
+import type { FolderInput } from "../../schemas/desk.schema";
+
+export const skills: FolderInput = {
+  id: "skills",
+  line: "What I build with, grouped by how I use it.",
+  files: [
+    {
+      name: "languages.md",
+      title: "Languages",
+      size: "1.4 KB",
+      kind: "MARKDOWN",
+      desc: "TypeScript first, with JavaScript, Python, Java and SQL when the job needs them.",
+      tags: ["TypeScript", "JavaScript", "HTML5", "CSS3", "Python", "Java", "SQL"],
+      notes: [
+        "TypeScript and JavaScript for everything on the web",
+        "HTML5 and CSS3 for responsive, accessible layouts",
+        "Python, Java and SQL as supporting languages",
+      ],
+      links: [],
+    },
+    {
+      name: "frontend-stack.md",
+      title: "Frontend Stack",
+      size: "2.1 KB",
+      kind: "MARKDOWN",
+      desc: "React and Next.js every day, styled with Tailwind and brought to life with Framer Motion.",
+      tags: ["React.js", "Next.js", "Redux Toolkit", "React Native", "Expo", "Tailwind CSS", "Three.js", "Framer Motion"],
+      notes: [
+        "Next.js with SSR and CSR",
+        "Redux Toolkit for shared state",
+        "Component kits: Material UI and Ant Design",
+        "React Native and Expo for mobile: I have built a mobile app with them",
+        "Responsive layouts and animation, with a keen eye for design",
+        "Three.js for interactive 3D, including a 3D model in the Cloud Primero SaaS product",
+      ],
+      links: [],
+    },
+    {
+      name: "backend-and-data.md",
+      title: "Backend & Data",
+      size: "1.9 KB",
+      kind: "MARKDOWN",
+      desc: "Backend skills I practise on my own: Node.js, Express and PostgreSQL.",
+      tags: ["Node.js", "Express.js", "PostgreSQL", "REST", "Socket.io"],
+      notes: [
+        "Practising REST API design in Node.js and Express on my own time",
+        "Used a Node.js backend in Capra Vision, my final year project",
+        "Relational data in PostgreSQL and SQL",
+        "Real-time features with Socket.io",
+      ],
+      links: [],
+    },
+    {
+      name: "practices-and-tools.md",
+      title: "Practices & Tools",
+      size: "2.3 KB",
+      kind: "MARKDOWN",
+      desc: "How I ship: performance, SEO, i18n and clear collaboration.",
+      tags: ["Performance", "SEO", "PWA", "i18n", "Agile", "GitHub", "Vercel", "Figma", "Adobe XD", "Illustrator", "Photoshop", "UI/UX"],
+      notes: [
+        "Lighthouse scores raised to 80+ and load times cut by optimising components, assets and data fetching",
+        "Multilingual apps in 6+ languages",
+        "Building frontend interfaces for AI features that use backend services and APIs",
+        "Integrated the Claude API",
+        "Git and GitHub for version control, Vercel for deployment",
+        "UI/UX design in Figma, taken from design to deployment",
+        "Adobe XD, Illustrator and Photoshop from my graphic design diploma",
+      ],
+      links: [],
+    },
+  ],
+};

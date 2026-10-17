@@ -1,0 +1,51 @@
+/*
+ * Typography tokens: font families, the type scale, weights and tracking.
+ *
+ * The two families are loaded in app/layout.tsx with next/font, which exposes them as
+ * --font-bricolage and --font-azeret. Everything else refers to the roles below, so swapping a
+ * font means changing one line here (and the import in layout.tsx).
+ *
+ * Use the scale as Tailwind classes: text-micro, text-caption, text-small, text-body-sm,
+ * text-body, text-lead, text-title, text-heading, text-display. Each one carries its own line-height.
+ */
+
+:root {
+  --font-text: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-code: var(--font-azeret), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --tracking-tight: -0.02em;
+  --tracking-wide: 0.04em;
+  --tracking-label: 0.08em;
+}
+
+@theme inline {
+  /* roles: font-sans is the reading font, font-mono the code and terminal font */
+  --font-sans: var(--font-text);
+  --font-mono: var(--font-code);
+  --font-heading: var(--font-text);
+
+  /* the scale */
+  --text-micro: 10.5px; /* kind badges */
+  --text-micro--line-height: 1.5;
+  --text-caption: 11.5px; /* pills, small labels, file names */
+  --text-caption--line-height: 1.5;
+  --text-small: 12.5px; /* terminal, meta lines */
+  --text-small--line-height: 1.5;
+  --text-body-sm: 13.5px; /* secondary body, buttons */
+  --text-body-sm--line-height: 1.5;
+  --text-body: 14.5px; /* card and panel body */
+  --text-body--line-height: 1.5;
+  --text-lead: 16px; /* card titles */
+  --text-lead--line-height: 1.4;
+  --text-title: 17px; /* compact panel title */
+  --text-title--line-height: 1.3;
+  --text-heading: 26px; /* panel title on small screens */
+  --text-heading--line-height: 1.1;
+  --text-display: 34px; /* panel title on wide screens */
+  --text-display--line-height: 1.05;
+}
