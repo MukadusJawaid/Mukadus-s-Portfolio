@@ -77,15 +77,17 @@ function Scene({ onSettled }: { onSettled: () => void }) {
   // floating panels cover part of the stage: terminal (left) and details (right) on wide screens, details (bottom) on narrow ones
   const { left, right, bottom } = useStageInsets();
   const resizing = useLayoutStore((s) => s.resizing);
-  // the brass nameplate sits at the edge of the frame and gets cut off on small screens, so it is dropped at 568px and below
-  const showNameplate = useViewportWidth() > 568;
+  // the brass nameplate sits at the edge of the frame and gets cut off on small screens, so it is dropped at 768px and below
+  // the zoom buttons and hint sit just above a bottom panel, so keep the laptop clear of them too
+  const camBottom = bottom ? bottom + 72 : bottom;
+  const showNameplate = useViewportWidth() > 768;
 
   return (
     <>
       <Lighting />
       <AdaptiveDpr pixelated={false} />
       <Room nameplate={showNameplate} />
-      <CameraController focused={open} leftPx={left} rightPx={right} topPx={TOP_PX} bottomPx={bottom} resizing={resizing} onSettled={onSettled} />
+      <CameraController focused={open} leftPx={left} rightPx={right} topPx={TOP_PX} bottomPx={camBottom} resizing={resizing} onSettled={onSettled} />
     </>
   );
 }
@@ -96,8 +98,8 @@ export default function DeskScene({ onReady, onFail }: Props) {
       <Canvas
         shadows
         // full device resolution when still; only drops while the visitor is actively dragging
-        dpr={[1, 2]}
-        performance={{ min: 0.75, debounce: 150 }}
+        dpr={[1, 3]}
+        performance={{ min: 0.67, debounce: 150 }}
         camera={{ fov: cam.fov, position: [0, 4, 11], near: 0.1, far: 80 }}
         gl={{ antialias: true, powerPreference: "high-performance", toneMappingExposure: 1.05 }}
         className="!absolute inset-0 cursor-grab active:cursor-grabbing"

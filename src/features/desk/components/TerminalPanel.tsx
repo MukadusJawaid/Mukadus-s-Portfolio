@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, CornerDownLeft, X } from "lucide-react";
 import { folders } from "../data/folders";
 import { shell } from "../data/scene3d";
 import { shortPath } from "../lib/prompt";
@@ -12,9 +12,11 @@ type Props = {
   className?: string;
   /** wide screens only: slides the terminal away */
   onCollapse?: () => void;
+  /** small-screen sheet: the hide button is a cross, since the panel comes up from the bottom rather than sliding left */
+  closeAsCross?: boolean;
 };
 
-export function TerminalPanel({ className = "", onCollapse }: Props) {
+export function TerminalPanel({ className = "", onCollapse, closeAsCross }: Props) {
   const ch = useDeskStore((s) => s.ch);
   const log = useDeskStore((s) => s.log);
   const run = useDeskStore((s) => s.run);
@@ -57,11 +59,11 @@ export function TerminalPanel({ className = "", onCollapse }: Props) {
         {onCollapse ? (
           <button
             onClick={onCollapse}
-            aria-label="Hide terminal"
-            title="Hide terminal"
+            aria-label={closeAsCross ? "Close terminal" : "Hide terminal"}
+            title={closeAsCross ? "Close" : "Hide terminal"}
             className="-mr-1 grid size-7 place-items-center rounded-md text-fg-dim transition hover:bg-white/10 hover:text-white"
           >
-            <ChevronLeft className="size-4" />
+            {closeAsCross ? <X className="size-4" /> : <ChevronLeft className="size-4" />}
           </button>
         ) : (
           <span className="size-7" aria-hidden />
@@ -92,7 +94,7 @@ export function TerminalPanel({ className = "", onCollapse }: Props) {
           if ((e.target as HTMLElement).closest("button, a, input") || window.getSelection()?.toString()) return;
           inputRef.current?.focus({ preventScroll: true });
         }}
-        className="min-h-0 flex-1 cursor-text overflow-y-auto px-4 py-4 font-mono text-small leading-[1.7] [scrollbar-color:var(--scrollbar)_transparent] [scrollbar-width:thin]"
+        className="min-h-0 flex-1 cursor-text overflow-y-auto px-4 py-4 font-mono text-caption leading-[1.6] [scrollbar-color:var(--scrollbar)_transparent] [scrollbar-width:thin]"
       >
         {log.map((l, i) => (
           <TerminalLine key={i} line={l} onGo={go} onFile={openDoc} />
@@ -125,11 +127,19 @@ export function TerminalPanel({ className = "", onCollapse }: Props) {
                 run("clear");
               }
             }}
-            className="h-7 min-w-[9rem] flex-1 bg-transparent text-white caret-ok outline-none placeholder:text-fg-ghost"
+            className="h-7 min-w-[9rem] flex-1 bg-transparent max-[991px]:h-9 max-[991px]:text-[16px] text-white caret-ok outline-none placeholder:text-fg-ghost"
             placeholder="type a command, or try help"
             autoComplete="off"
             spellCheck={false}
           />
+          <button
+            type="submit"
+            aria-label="Send command"
+            title="Send"
+            className="grid size-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[.06] text-fg-secondary transition hover:border-link/50 hover:text-white lg:hidden"
+          >
+            <CornerDownLeft className="size-4" />
+          </button>
         </form>
       </div>
     </section>

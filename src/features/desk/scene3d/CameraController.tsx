@@ -97,6 +97,8 @@ export function CameraController({ focused, leftPx, rightPx, topPx, bottomPx, re
   const tween = useRef<Tween | null>(null);
   const shiftX = useRef(0);
   const shiftY = useRef(0);
+  /** the projection shift jumps straight to its target on the first frame; only later changes ease */
+  const shiftReady = useRef(false);
   const sway = useRef<{ t0: number; base: number } | null>(null);
 
   useEffect(() => {
@@ -111,7 +113,7 @@ export function CameraController({ focused, leftPx, rightPx, topPx, bottomPx, re
       const freeH = Math.max(0.25, 1 - (topPx + bottomPx) / size.height);
       const dist = focused
         ? fitScreenDistance(aspect, freeW, freeH)
-        : THREE.MathUtils.clamp(((aspect < 0.9 ? 5 : pose.fitWidth) / freeW) / (2 * t * aspect), cam.limits.minDistance, cam.limits.maxDistance);
+        : THREE.MathUtils.clamp((THREE.MathUtils.lerp(4.1, pose.fitWidth, THREE.MathUtils.clamp((aspect - 0.9) / 0.45, 0, 1)) / freeW) / (2 * t * aspect), cam.limits.minDistance, cam.limits.maxDistance);
 
       const sp = Math.sin(pose.polar);
       const [tx, ty, tz] = pose.target;
@@ -186,6 +188,11 @@ export function CameraController({ focused, leftPx, rightPx, topPx, bottomPx, re
     // floating panels, while it stays the camera's pivot for orbiting and zooming
     const wantX = (rightPx - leftPx) / 2;
     const wantY = (bottomPx - topPx) / 2;
+    if (!shiftReady.current) {
+      shiftX.current = wantX;
+      shiftY.current = wantY;
+      shiftReady.current = true;
+    }
     const k = Math.min(dt, 0.05);
     shiftX.current = THREE.MathUtils.damp(shiftX.current, wantX, 6, k);
     shiftY.current = THREE.MathUtils.damp(shiftY.current, wantY, 6, k);

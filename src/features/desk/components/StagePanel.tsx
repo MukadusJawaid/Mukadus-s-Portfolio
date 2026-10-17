@@ -42,7 +42,11 @@ export function StagePanel({ className = "" }: { className?: string }) {
       )}
 
       {!ready && !failed && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 font-mono text-xs text-stage-fg" role="status">
+        <div
+          className="absolute inset-y-0 flex flex-col items-center justify-center gap-4 font-mono text-xs text-stage-fg"
+          style={{ left, right }}
+          role="status"
+        >
           <span className="size-8 animate-spin rounded-full border-2 border-stage-fg/25 border-t-link" aria-hidden />
           setting up the desk…
         </div>

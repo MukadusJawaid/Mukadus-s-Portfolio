@@ -90,7 +90,7 @@ export function DeskExperience() {
               className="mx-auto max-w-2xl border-0 bg-transparent p-2 text-white shadow-none duration-500 data-[side=bottom]:h-[min(600px,72dvh)] data-[side=bottom]:max-h-[72dvh]"
             >
               <SheetTitle className="sr-only">Terminal</SheetTitle>
-              <TerminalPanel className="h-full" onCollapse={closeTermSheet} />
+              <TerminalPanel className="h-full" onCollapse={closeTermSheet} closeAsCross />
             </SheetContent>
           </Sheet>
 

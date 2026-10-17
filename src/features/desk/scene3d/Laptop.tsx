@@ -12,8 +12,8 @@ import { makeCanvas } from "./textures";
 import { palette } from "./palette";
 
 const POPOVER_DELAY = 0.15;
-/** the screen is drawn at 1.6x so text stays crisp when the camera zooms in */
-const SCALE = 1.6;
+/** the screen is drawn at 2x so text stays crisp when the camera zooms in */
+const SCALE = 2;
 const KEY_ROWS = 5;
 const KEY_COLS = 14;
 
@@ -198,7 +198,7 @@ export function Laptop() {
         <mesh position={[0, lid.h / 2, lid.t / 2 + 0.003]} onPointerMove={move} onPointerOut={leave} onClick={click}>
           <planeGeometry args={[screen.w, screen.h]} />
           <meshBasicMaterial toneMapped={false}>
-            <canvasTexture ref={tex} attach="map" args={[canvas]} colorSpace={THREE.SRGBColorSpace} anisotropy={16} />
+            <canvasTexture ref={tex} attach="map" args={[canvas]} colorSpace={THREE.SRGBColorSpace} anisotropy={16} generateMipmaps={false} minFilter={THREE.LinearFilter} magFilter={THREE.LinearFilter} />
           </meshBasicMaterial>
         </mesh>
         <mesh position={[0, lid.h - 0.07, lid.t / 2 + 0.004]}>
