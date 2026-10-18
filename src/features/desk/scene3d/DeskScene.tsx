@@ -1,8 +1,9 @@
 "use client";
 
-import { Component, memo, type ReactNode } from "react";
-import { Canvas } from "@react-three/fiber";
-import { AdaptiveDpr, Environment, Lightformer } from "@react-three/drei";
+import { Component, memo, useEffect, type ReactNode } from "react";
+import * as THREE from "three";
+import { Canvas, useThree } from "@react-three/fiber";
+import { Environment, Lightformer } from "@react-three/drei";
 import { camera as cam } from "../data/scene3d";
 import { useStageInsets } from "../lib/insets";
 import { useViewportWidth } from "../lib/media";
@@ -10,12 +11,16 @@ import { TOP_PX } from "../lib/layout";
 import { useDeskStore } from "../store/useDeskStore";
 import { useLayoutStore } from "../store/useLayoutStore";
 import { CameraController } from "./CameraController";
+import { preloadModels } from "./models";
 import { Room } from "./Room";
 import { palette } from "./palette";
 import { tokens } from "@/styles/tokens";
 import { readToken } from "../lib/tone";
 
 type Props = { onReady: () => void; onFail: () => void };
+
+// the model downloads start as soon as this chunk loads, in parallel with the rest of the scene setup
+preloadModels();
 
 /** If WebGL is unavailable or the scene throws, the stage falls back to a plain folder list. */
 class Boundary extends Component<{ onFail: () => void; children: ReactNode }, { failed: boolean }> {
@@ -78,14 +83,28 @@ function Scene({ onSettled }: { onSettled: () => void }) {
   const { left, right, bottom } = useStageInsets();
   const resizing = useLayoutStore((s) => s.resizing);
   // the brass nameplate sits at the edge of the frame and gets cut off on small screens, so it is dropped at 768px and below
-  // the zoom buttons and hint sit just above a bottom panel, so keep the laptop clear of them too
-  const camBottom = bottom ? bottom + 72 : bottom;
+  // the zoom buttons now stand at the right edge, so the laptop may use all the space above the bottom panel
+  const camBottom = bottom;
   const showNameplate = useViewportWidth() > 768;
+
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  // Upload every model texture to the graphics card now, while the placeholder image is still showing. Otherwise each
+  // texture is uploaded (and its mipmaps built) the first time it is drawn, which freezes a frame or two during the intro.
+  useEffect(() => {
+    const seen = new Set<THREE.Texture>();
+    scene.traverse((o) => {
+      const mat = (o as THREE.Mesh).material;
+      for (const m of Array.isArray(mat) ? mat : mat ? [mat] : []) {
+        for (const v of Object.values(m)) if (v instanceof THREE.Texture) seen.add(v);
+      }
+    });
+    seen.forEach((t) => gl.initTexture(t));
+  }, [gl, scene]);
 
   return (
     <>
       <Lighting />
-      <AdaptiveDpr pixelated={false} />
       <Room nameplate={showNameplate} />
       <CameraController focused={open} leftPx={left} rightPx={right} topPx={TOP_PX} bottomPx={camBottom} resizing={resizing} onSettled={onSettled} />
     </>
@@ -97,9 +116,8 @@ export default function DeskScene({ onReady, onFail }: Props) {
     <Boundary onFail={onFail}>
       <Canvas
         shadows
-        // full device resolution when still; only drops while the visitor is actively dragging
-        dpr={[1, 3]}
-        performance={{ min: 0.67, debounce: 150 }}
+        // full device resolution (up to 2x) all the time: lowering it while the camera moves is what made the screen blur
+        dpr={[1, 2]}
         camera={{ fov: cam.fov, position: [0, 4, 11], near: 0.1, far: 80 }}
         gl={{ antialias: true, powerPreference: "high-performance", toneMappingExposure: 1.05 }}
         className="!absolute inset-0 cursor-grab active:cursor-grabbing"

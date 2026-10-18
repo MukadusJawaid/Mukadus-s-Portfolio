@@ -4,7 +4,8 @@ import { useEffect, useRef, type ComponentRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { CameraControls } from "@react-three/drei";
 import * as THREE from "three";
-import { camera as cam, screenCorners } from "../data/scene3d";
+import { camera as cam, screenCenter, screenCorners } from "../data/scene3d";
+import { deskSession } from "../lib/session";
 import { useViewStore } from "../store/useViewStore";
 
 type Props = {
@@ -27,8 +28,9 @@ const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t 
 /** fast start, gentle landing: no hesitation at the beginning of the glide */
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
-const CORNERS = screenCorners().map(([x, y, z]) => new THREE.Vector3(x, y, z));
+/** breathing room around the screen, as a share of the free area; tighter on small screens where space is scarce */
 const MARGIN = 0.1;
+const MARGIN_SMALL = 0.02;
 
 /**
  * Closest camera distance at which the whole laptop screen fits the free area of the stage (not
@@ -36,12 +38,14 @@ const MARGIN = 0.1;
  * real camera, so the result is correct for any window size. `freeW` / `freeH` are the fractions
  * of the stage width / height that are free.
  */
-function fitScreenDistance(aspect: number, freeW: number, freeH: number) {
-  const { polar, azimuth, target } = cam.focus;
-  const t = new THREE.Vector3(...target);
+function fitScreenDistance(aspect: number, freeW: number, freeH: number, margin: number) {
+  const { polar, azimuth } = cam.focus;
+  const t = new THREE.Vector3(...screenCenter());
   const dir = new THREE.Vector3(Math.sin(polar) * Math.sin(azimuth), Math.cos(polar), Math.sin(polar) * Math.cos(azimuth));
   const probe = new THREE.PerspectiveCamera(cam.fov, aspect, 0.1, 100);
   const ndc = new THREE.Vector3();
+  // measured from the real laptop model, so read at call time rather than at import
+  const corners = screenCorners().map(([x, y, z]) => new THREE.Vector3(x, y, z));
 
   const fits = (dist: number) => {
     probe.position.copy(t).addScaledVector(dir, dist);
@@ -50,12 +54,12 @@ function fitScreenDistance(aspect: number, freeW: number, freeH: number) {
     probe.updateProjectionMatrix();
     let w = 0;
     let h = 0;
-    for (const c of CORNERS) {
+    for (const c of corners) {
       ndc.copy(c).project(probe);
       w = Math.max(w, Math.abs(ndc.x));
       h = Math.max(h, Math.abs(ndc.y));
     }
-    return w <= freeW * (1 - MARGIN) && h <= freeH * (1 - MARGIN);
+    return w <= freeW * (1 - margin) && h <= freeH * (1 - margin);
   };
 
   let lo = cam.limits.minDistance;
@@ -112,11 +116,12 @@ export function CameraController({ focused, leftPx, rightPx, topPx, bottomPx, re
       const freeW = Math.max(0.3, 1 - (leftPx + rightPx) / size.width);
       const freeH = Math.max(0.25, 1 - (topPx + bottomPx) / size.height);
       const dist = focused
-        ? fitScreenDistance(aspect, freeW, freeH)
+        ? fitScreenDistance(aspect, freeW, freeH, size.width < 992 ? MARGIN_SMALL : MARGIN)
         : THREE.MathUtils.clamp((THREE.MathUtils.lerp(4.1, pose.fitWidth, THREE.MathUtils.clamp((aspect - 0.9) / 0.45, 0, 1)) / freeW) / (2 * t * aspect), cam.limits.minDistance, cam.limits.maxDistance);
 
       const sp = Math.sin(pose.polar);
-      const [tx, ty, tz] = pose.target;
+      // close up, the camera looks at the middle of the real screen
+      const [tx, ty, tz] = focused ? screenCenter() : cam.overview.target;
       const toT = new THREE.Vector3(tx, ty, tz);
       const toP = new THREE.Vector3(
         tx + dist * sp * Math.sin(pose.azimuth),
@@ -142,7 +147,7 @@ export function CameraController({ focused, leftPx, rightPx, topPx, bottomPx, re
       first.current = false;
       const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const c = ref.current;
-      if (calm || focused || !c) {
+      if (calm || focused || !c || deskSession.returning) {
         apply.current(false);
         mode.current = "reveal"; // no intro, only wait for smooth frames before showing the scene
       } else {

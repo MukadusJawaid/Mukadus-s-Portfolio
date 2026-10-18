@@ -39,7 +39,7 @@
 | 📱 **Fully responsive** | Floating panels on desktop, bottom sheets on tablets and phones. Nothing overflows, from 360px up. |
 | 🎨 **Token-driven design** | Every colour and font size comes from `src/styles/`. Change a token, change the site. |
 | 🔎 **Built to be found** | Crawlable text version, structured data, share card, sitemap and a full favicon set. |
-| 📦 **No downloaded assets** | Wood, felt, leather, brass and paper are all generated in code. |
+| 📦 **Optimized 3D models** | The desk, laptop, plant and clock are glTF models, compressed to about 4 MB in total (meshopt geometry, WebP textures). The lid opens when the desk is ready and closes before you leave for the website. |
 
 ## 🎮 Controls
 
@@ -100,7 +100,7 @@ src/features/desk/data/
 
 - **Add a folder:** create `data/folders/<name>.ts`, register it in `folders/index.ts`, and add one line, `--folder-<name>`, to `src/styles/tokens.css`. A tile appears on the laptop automatically.
 - **A pill beside a folder title**, like *2.5+ years experience*: set `badge` on the folder.
-- **A typo fails loudly at startup**, because Zod checks every field.
+- **A typo fails at build time**, because the content is typed (a missing or misspelled field is a TypeScript error).
 
 ### Design tokens
 
@@ -126,7 +126,7 @@ src/
 ├── features/seo/        site config, structured data, crawlable text, share image
 └── features/desk/       the experience (feature-based)
     ├── components/      terminal, stage, details panel, cards, resize handle
-    ├── scene3d/         room, laptop, camera controller, screen drawing, textures, palette
+    ├── scene3d/         room (wall and props), laptop model and screen, camera controller, screen drawing, models.ts (where each model stands)
     ├── store/           Zustand: desk state, layout, camera actions
     ├── lib/             terminal commands, layout maths, media hooks, tone helpers
     └── schemas/ · data/ · types.ts
@@ -136,7 +136,7 @@ A few decisions worth knowing about:
 
 - **Panels never resize the canvas.** The terminal and details float over a full-screen 3D stage and only animate `transform` and `opacity`. A resizing WebGL canvas is what makes slides stutter.
 - **The camera frames the free space.** The projection is shifted for each floating panel, so the laptop stays centred between them while remaining the pivot for orbit and zoom. On the screen, the real corners of the laptop are fitted, so nothing is cropped at any window size.
-- **The screen is a texture.** The laptop UI is drawn with the 2D canvas API at 1.6× resolution and hit-tested through the mesh's UV coordinates.
+- **The screen is a texture.** The laptop UI is drawn with the 2D canvas API onto the model's screen panel, at the size it actually appears on your display (so it stays sharp), and hit-tested through the panel's UV coordinates. Only that panel is clickable.
 - **Time-based motion.** Camera moves use a clock-driven tween, so they take the same time on slow and fast devices.
 - **The terminal is a log.** Navigation and commands append to a history, and the terminal and the details panel stay in sync because both read the same store.
 
@@ -145,7 +145,7 @@ A few decisions worth knowing about:
 | **Framework** | Next.js 16 (App Router), React 19, TypeScript |
 | **3D** | Three.js, `@react-three/fiber`, `@react-three/drei` |
 | **UI** | Tailwind CSS 4, shadcn/ui on Base UI, Lucide, Framer Motion |
-| **State and data** | Zustand (only the terminal width is saved, in `localStorage`), Zod |
+| **State and data** | Zustand (only the terminal width is saved, in `localStorage`), plain TypeScript types for content |
 
 ## 🔎 SEO
 
@@ -165,7 +165,8 @@ The desk is a canvas, which search engines can't read, so the site also ships wh
 
 ## ⚡ Performance and accessibility
 
-- Shaders are compiled off the main thread before the scene appears, and the wall boards are a single instanced mesh.
+- The 3D scene loads after the first paint, with a still image of the desk in its place until it is ready. Shaders are compiled off the main thread, and the wall boards are a single instanced mesh.
+- To judge real loading speed, run a production build next to the dev server: `NEXT_DIST_DIR=.next-prod npm run build && NEXT_DIST_DIR=.next-prod npx next start -p 3100`. The dev server compiles pages on demand and is much slower.
 - Render resolution drops only while you drag the camera, and returns to full as soon as you stop.
 - `prefers-reduced-motion` is respected (no intro glide).
 - Hidden panels are `inert`, so keyboard focus never lands on something off-screen.

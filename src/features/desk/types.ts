@@ -1,9 +1,7 @@
-import type { z } from "zod";
-import type { deskFileSchema, fileLinkSchema, folderSchema } from "./schemas/desk.schema";
+import type { DeskFile, FolderInput } from "./schemas/desk.schema";
 
-export type FileLink = z.infer<typeof fileLinkSchema>;
-export type DeskFile = z.infer<typeof deskFileSchema>;
-export type Folder = z.infer<typeof folderSchema>;
+export type { DeskFile };
+export type Folder = FolderInput;
 
 export type TermLine =
   | { k: "cmd"; path: string; text: string }

@@ -29,7 +29,7 @@ export const experience: FolderInput = {
       size: "2.7 KB",
       kind: "ROLE",
       meta: "Jan 2024 – Dec 2025 · Associate React.js Developer · Karachi",
-      desc: "Contributed to 10+ client projects and independently delivered 3–5 of them end to end.",
+      desc: "Joined as an intern, grew into a Junior and then an Associate React.js Developer. Contributed to 10+ client projects and independently delivered 3–5 of them end to end.",
       tags: ["React.js", "Next.js", "REST APIs", "PWA", "i18n"],
       notes: [
         "Built Tutor Elli, a UK e-learning platform, and Melad Zone",

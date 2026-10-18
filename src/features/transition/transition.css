@@ -1,0 +1,65 @@
+/*
+ * The page-transition panel. Everything here animates only opacity and transform (done on the graphics card), so it stays
+ * smooth while the next page is starting up. Colours are the design tokens.
+ */
+
+.tr-panel {
+  position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; overflow: hidden;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  background:
+    radial-gradient(640px 380px at 20% 10%, color-mix(in oklab, var(--ice) 14%, var(--bg)), transparent 70%),
+    radial-gradient(520px 320px at 90% 100%, color-mix(in oklab, var(--folder-projects) 11%, var(--bg)), transparent 70%),
+    var(--bg);
+}
+.tr-panel[data-state="in"] { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1); }
+.tr-panel[data-state="out"] { opacity: 0; visibility: visible; pointer-events: auto; transition: opacity 0.32s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* pattern: a fading grid, with a finer dot field over it */
+.tr-grid {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, #000 25%, transparent 80%);
+}
+.tr-dots {
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle, var(--line-strong) 1.1px, transparent 1.5px);
+  background-size: 26px 26px; background-position: 13px 13px;
+  mask-image: radial-gradient(ellipse 90% 80% at 80% 20%, #000 10%, transparent 70%);
+}
+
+/* floating shapes: soft tinted outlines that drift and turn slowly */
+.tr-shape {
+  position: absolute; left: var(--x); top: var(--y); width: var(--s); height: var(--s); border-radius: var(--r);
+  border: 1.5px solid color-mix(in oklab, var(--c) 55%, transparent);
+  background: linear-gradient(150deg, color-mix(in oklab, var(--c) 20%, transparent), color-mix(in oklab, var(--c) 4%, transparent));
+  box-shadow: 0 0 40px -12px var(--c);
+  animation: tr-drift 5s ease-in-out var(--d) infinite alternate;
+}
+@keyframes tr-drift { from { transform: translate3d(0, 0, 0) rotate(-8deg); } to { transform: translate3d(0, -22px, 0) rotate(10deg); } }
+
+/* a thin line of light sweeps across the top */
+.tr-sweep {
+  position: absolute; left: 0; top: 0; height: 2px; width: 100%; transform: translateX(-100%) scaleX(0.3);
+  background: linear-gradient(90deg, transparent, var(--ice), var(--ok), transparent); animation: tr-sweep 0.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes tr-sweep { to { transform: translateX(100%) scaleX(0.3); } }
+
+/* the terminal line in the middle, on a small glass card so it stays readable over the shapes */
+.tr-card {
+  position: relative; margin: 0; padding: 14px 22px; border-radius: 16px; border: 1px solid var(--line-strong);
+  background: color-mix(in oklab, var(--panel) 88%, transparent); box-shadow: 0 24px 60px -24px rgb(0 0 0 / 0.9);
+  font-family: var(--font-mono), monospace; font-size: 14px; color: var(--fg-secondary);
+}
+.tr-ok { color: var(--ok); } .tr-link { color: var(--link); }
+
+/* the typed command: it grows one character at a time, then a block cursor blinks after it */
+.tr-type { display: inline-block; overflow: hidden; white-space: nowrap; vertical-align: bottom; width: 0; color: #fff; animation: tr-type 0.5s steps(var(--n, 12), end) 0.12s forwards; }
+@keyframes tr-type { to { width: calc(var(--n, 12) * 1ch); } }
+.tr-caret { display: inline-block; width: 0.6ch; height: 1.1em; margin-left: 2px; vertical-align: -0.2em; background: var(--ok); animation: tr-blink 0.8s steps(1) infinite; }
+@keyframes tr-blink { 50% { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tr-shape, .tr-sweep, .tr-caret { animation: none; }
+  .tr-type { width: auto; animation: none; }
+}

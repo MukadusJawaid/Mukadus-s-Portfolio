@@ -29,7 +29,7 @@ export const about: FolderInput = {
       size: "0.4 KB",
       kind: "JSON",
       meta: "mukadus.jawaid.dev@gmail.com",
-      desc: "Email is the best way to reach me. GitHub, LinkedIn and my portfolio are below.",
+      desc: "Email is the best way to reach me. GitHub, LinkedIn and Behance are below.",
       tags: ["Contact"],
       notes: ["Based in Karachi, Pakistan"],
       links: [

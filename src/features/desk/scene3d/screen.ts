@@ -1,5 +1,5 @@
 import { folders as allFolders } from "../data/folders";
-import { owner } from "../data/scene3d";
+import { owner, robot } from "../data/scene3d";
 import type { Folder } from "../types";
 import { palette } from "./palette";
 import { readToken } from "../lib/tone";
@@ -20,6 +20,10 @@ export type ScreenView = {
   hoverRow: number;
   hoverClose: boolean;
   hoverBack: boolean;
+  /** the screen is small in the view: big, simple greeting instead of small text */
+  far?: boolean;
+  /** 0 to 1 while the screen wakes up after being zoomed in on */
+  wake?: number;
 };
 
 const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
@@ -29,7 +33,7 @@ const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 const TILE_COUNT = allFolders.length - 1;
 const TILE_GAP = 232;
 const tileX = (i: number) => SW / 2 + (i - (TILE_COUNT + 1) / 2) * TILE_GAP;
-const TILE_Y = 380;
+const TILE_Y = 436;
 const TILE = 176;
 const tileRect = (i: number): Rect => ({ x: tileX(i) - 108, y: TILE_Y - 100, w: 216, h: 290 });
 
@@ -52,6 +56,16 @@ export function hitTest(ch: number, fileCount: number, x: number, y: number): Hi
   if (inside(backRect, x, y)) return { t: "back" };
   for (let j = 0; j < fileCount; j++) if (inside(rowRect(j), x, y)) return { t: "file", j };
   return { t: "none" };
+}
+
+/** Shortens a file name from the middle ("diploma-graphic…design.md") until it fits `max` pixels, keeping its ending. */
+function fitEnd(g: CanvasRenderingContext2D, name: string, max: number) {
+  if (g.measureText(name).width <= max) return name;
+  const dot = name.lastIndexOf(".");
+  const tail = dot > 0 ? name.slice(Math.max(0, dot - 6)) : name.slice(-6);
+  let head = name.slice(0, Math.max(1, name.length - tail.length));
+  while (head.length > 1 && g.measureText(head + "…" + tail).width > max) head = head.slice(0, -1);
+  return head + "…" + tail;
 }
 
 function rrect(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -134,18 +148,47 @@ function menuBar(g: CanvasRenderingContext2D) {
   g.textAlign = "left";
 }
 
+function pixelFace(g: CanvasRenderingContext2D, cx: number, cy: number) {
+  g.save();
+  g.translate(cx, cy);
+  g.strokeStyle = "#9ee7ff";
+  g.lineWidth = 6;
+  g.beginPath();
+  g.moveTo(0, -62);
+  g.lineTo(0, -82);
+  g.stroke();
+  g.fillStyle = "#9ee7ff";
+  g.beginPath();
+  g.arc(0, -88, 8, 0, Math.PI * 2);
+  g.fill();
+  g.fillStyle = "#f4f7ff";
+  rrect(g, -64, -62, 128, 104, 34);
+  g.fill();
+  g.fillStyle = "#14203f";
+  rrect(g, -48, -42, 96, 58, 22);
+  g.fill();
+  g.fillStyle = "#7fe3ff";
+  g.beginPath();
+  g.arc(-22, -13, 9, 0, Math.PI * 2);
+  g.arc(22, -13, 9, 0, Math.PI * 2);
+  g.fill();
+  g.restore();
+}
+
 function overview(g: CanvasRenderingContext2D, folders: Folder[], v: ScreenView) {
   g.textAlign = "center";
   g.textBaseline = "alphabetic";
-  g.fillStyle = palette.white;
-  g.font = `700 66px ${SANS}`;
-  g.fillText(`Hi, I'm ${owner.name}`, SW / 2, 160);
-  g.fillStyle = "rgba(255,255,255,.8)";
-  g.font = `500 28px ${SANS}`;
-  g.fillText("Software engineer · React · Next.js · TypeScript", SW / 2, 208);
-  g.fillStyle = "rgba(255,255,255,.55)";
-  g.font = `400 22px ${SANS}`;
-  g.fillText("Hover a folder to peek inside, click to open it", SW / 2, 246);
+  {
+    g.fillStyle = palette.white;
+    g.font = `700 66px ${SANS}`;
+    g.fillText(`Hi, I'm ${owner.name}`, SW / 2, 216);
+    g.fillStyle = "rgba(255,255,255,.8)";
+    g.font = `500 28px ${SANS}`;
+    g.fillText("Software engineer · React · Next.js · TypeScript", SW / 2, 264);
+    g.fillStyle = "rgba(255,255,255,.55)";
+    g.font = `400 22px ${SANS}`;
+    g.fillText("Hover a folder to peek inside, click to open it", SW / 2, 302);
+  }
 
   for (let i = 1; i <= TILE_COUNT; i++) {
     const f = folders[i];
@@ -176,7 +219,7 @@ function overview(g: CanvasRenderingContext2D, folders: Folder[], v: ScreenView)
 
     g.textAlign = "center";
     g.fillStyle = palette.white;
-    g.font = `700 30px ${SANS}`;
+    g.font = `700 px ${SANS}`;
     g.fillText(f.id[0].toUpperCase() + f.id.slice(1), cx, TILE_Y + 138);
     g.fillStyle = "rgba(255,255,255,.62)";
     g.font = `500 21px ${SANS}`;
@@ -189,7 +232,7 @@ function overview(g: CanvasRenderingContext2D, folders: Folder[], v: ScreenView)
     const pw = 380;
     const ph = 60 + f.files.length * 42;
     const px = Math.min(SW - pw - 24, Math.max(24, tileX(v.hoverIcon) - pw / 2));
-    const py = TILE_Y + 196;
+    const py = TILE_Y + 140;
     g.shadowColor = "rgba(0,0,0,.5)";
     g.shadowBlur = 30;
     g.shadowOffsetY = 12;
@@ -301,8 +344,12 @@ function windowView(g: CanvasRenderingContext2D, folders: Folder[], v: ScreenVie
     g.textBaseline = "middle";
     g.fillText(file.name.split(".").pop()!.slice(0, 3).toUpperCase(), r.x + 35, r.y + 38);
     g.textAlign = "left";
-    g.font = `600 27px ${SANS}`;
-    g.fillText(file.name, r.x + 72, r.y + 29);
+    // long names shrink a little, then lose their middle, so the ending (".md") always stays inside the row
+    const room = r.w - 72 - 22;
+    let size = 27;
+    g.font = `600 ${size}px ${SANS}`;
+    while (size > 21 && g.measureText(file.name).width > room) g.font = `600 ${--size}px ${SANS}`;
+    g.fillText(fitEnd(g, file.name, room), r.x + 72, r.y + 29);
     g.fillStyle = sel ? "rgba(255,255,255,.85)" : "rgba(255,255,255,.55)";
     g.font = `500 18px ${SANS}`;
     g.fillText(`${file.kind.toLowerCase()} · ${file.size}`, r.x + 72, r.y + 54);
@@ -373,10 +420,40 @@ function windowView(g: CanvasRenderingContext2D, folders: Folder[], v: ScreenVie
   }
 }
 
+/** Seen from far away the screen is asleep: no tiny folders, just a big hello from the robot. */
+function sleeping(g: CanvasRenderingContext2D) {
+  g.fillStyle = "#070b16";
+  g.fillRect(0, 0, SW, SH);
+  const glow = g.createRadialGradient(SW / 2, SH / 2 - 40, 20, SW / 2, SH / 2 - 40, 520);
+  glow.addColorStop(0, "rgba(90,140,255,.22)");
+  glow.addColorStop(1, "rgba(90,140,255,0)");
+  g.fillStyle = glow;
+  g.fillRect(0, 0, SW, SH);
+  pixelFace(g, SW / 2, SH / 2 - 120);
+  g.textAlign = "center";
+  g.textBaseline = "alphabetic";
+  g.fillStyle = palette.white;
+  g.font = `800 104px ${SANS}`;
+  g.fillText(`Hi, I'm ${robot.name}!`, SW / 2, SH / 2 + 80);
+  g.fillStyle = "rgba(255,255,255,.7)";
+  g.font = `600 44px ${SANS}`;
+  g.fillText(`${owner.name}'s little helper. Zoom in to wake the screen.`, SW / 2, SH / 2 + 150);
+  g.textAlign = "left";
+}
+
 export function drawScreen(g: CanvasRenderingContext2D, folders: Folder[], v: ScreenView) {
+  if (v.ch === 0 && v.far) {
+    sleeping(g);
+    return;
+  }
   wallpaper(g);
   menuBar(g);
   if (v.ch === 0) overview(g, folders, v);
   else windowView(g, folders, v);
+  // waking up: the picture fades in from black, like a computer coming out of sleep
+  if (v.wake !== undefined && v.wake < 1) {
+    g.fillStyle = `rgba(0,0,0,${1 - v.wake * v.wake})`;
+    g.fillRect(0, 0, SW, SH);
+  }
   g.textAlign = "left";
 }

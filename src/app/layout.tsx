@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Azeret_Mono, Bricolage_Grotesque } from "next/font/google";
 import { site } from "@/features/seo/site";
+import { TransitionOverlay } from "@/features/transition/TransitionOverlay";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -55,11 +56,16 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
+    // suppressHydrationWarning: browser extensions add attributes to <html> before React loads (this is not a bug in the app)
     <html
       lang="en"
       className={`${bricolage.variable} ${azeret.variable} dark h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        {children}
+        <TransitionOverlay />
+      </body>
     </html>
   );
 }
