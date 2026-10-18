@@ -1,0 +1,3 @@
+module.exports=[33354,(a,b,c)=>{"use strict";c._=function(a){return a&&a.__esModule?a:{default:a}}},38783,(a,b,c)=>{"use strict";b.exports=a.r(42602).vendored["react-ssr"].ReactServerDOMTurbopackClient},35106,a=>{a.v(b=>Promise.all(["server/chunks/ssr/src_features_desk_components_motionFeatures_ts_1uaozbensoh0c._.js","server/chunks/ssr/1q96_modules_framer-motion_dist_es_render_dom_features-animation_mjs_1048vjs5pelfv._.js"].map(b=>a.l(b))).then(()=>b(45983)))}];
+
+//# sourceMappingURL=_10p8g-bd22uvh._.js.map
