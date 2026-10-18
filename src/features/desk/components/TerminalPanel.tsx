@@ -115,23 +115,26 @@ export function TerminalPanel({ className = "", onCollapse, closeAsCross }: Prop
             <span className="text-link">{path}</span>
             <span className="text-ok">%</span>
           </label>
-          <input
-            id="cmd"
-            ref={inputRef}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            // like a real terminal: Ctrl+L (or Cmd+K on a Mac) clears the screen
-            onKeyDown={(e) => {
-              if ((e.ctrlKey && e.key === "l") || (e.metaKey && e.key === "k")) {
-                e.preventDefault();
-                run("clear");
-              }
-            }}
-            className="h-7 min-w-[9rem] flex-1 bg-transparent max-[991px]:h-9 max-[991px]:text-[16px] text-white caret-ok outline-none placeholder:text-fg-ghost"
-            placeholder="type a command, or try help"
-            autoComplete="off"
-            spellCheck={false}
-          />
+          {/* below 992px iOS zooms into inputs under 16px, so the field is 16px and scaled down to match the history text */}
+          <div className="relative h-7 min-w-[9rem] flex-1">
+            <input
+              id="cmd"
+              ref={inputRef}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              // like a real terminal: Ctrl+L (or Cmd+K on a Mac) clears the screen
+              onKeyDown={(e) => {
+                if ((e.ctrlKey && e.key === "l") || (e.metaKey && e.key === "k")) {
+                  e.preventDefault();
+                  run("clear");
+                }
+              }}
+              className="absolute left-0 top-0 h-full w-full bg-transparent text-caption max-[991px]:h-[139%] max-[991px]:w-[139%] max-[991px]:origin-top-left max-[991px]:scale-[.72] max-[991px]:text-[16px] text-white caret-ok outline-none placeholder:text-fg-ghost"
+              placeholder="type a command, or try help"
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </div>
           <button
             type="submit"
             aria-label="Send command"
