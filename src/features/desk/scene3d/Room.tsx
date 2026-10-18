@@ -1,21 +1,34 @@
 "use client";
 
-import { memo, useCallback, useMemo } from "react";
-import { RoundedBox } from "@react-three/drei";
+import { memo, useCallback, useEffect, useMemo } from "react";
+import { RoundedBox, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { owner } from "../data/scene3d";
 import { Laptop } from "./Laptop";
-import { leatherTexture, nameplateTexture, woodTexture } from "./textures";
+import { MODELS, PLACE } from "./models";
+import { nameplateTexture, woodTexture } from "./textures";
 import { palette } from "./palette";
 
 const BRASS = { color: palette.brass.base, roughness: 0.28, metalness: 0.9 } as const;
 
-/** A cosy study: teak desk, charcoal desk mat on tan leather, panelled wall, the laptop and a few props. */
+/** A downloaded model standing in the room. Only the laptop screen is clickable, so props never catch the pointer. */
+function Prop({ url, place }: { url: string; place: { scale: number; position: readonly [number, number, number] } }) {
+  const { scene } = useGLTF(url, false);
+  useEffect(() => {
+    scene.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      m.raycast = () => {};
+      m.castShadow = true;
+      m.receiveShadow = true;
+    });
+  }, [scene]);
+  return <primitive object={scene} position={[...place.position]} scale={place.scale} />;
+}
+
+/** A cosy study: a standing desk with the laptop, a plant and a wall clock, against a panelled wall, plus a few small props. */
 export const Room = memo(function Room({ nameplate: showNameplate = true }: { nameplate?: boolean }) {
-  const teak = useMemo(() => woodTexture(palette.wood.desk, [2.2, 1.4]), []);
   const panel = useMemo(() => woodTexture(palette.wood.panel, [0.3, 3]), []);
-  const felt = useMemo(() => leatherTexture(palette.mat.felt), []);
-  const tan = useMemo(() => leatherTexture(palette.mat.leather), []);
   const plate = useMemo(() => nameplateTexture(owner.name, owner.role), []);
   const mugBody = useMemo(
     () =>
@@ -42,19 +55,7 @@ export const Room = memo(function Room({ nameplate: showNameplate = true }: { na
 
   return (
     <group>
-      {/* teak desk top */}
-      <mesh position={[0, -0.15, 0.4]} receiveShadow>
-        <boxGeometry args={[18, 0.3, 11]} />
-        <meshStandardMaterial map={teak} roughness={0.55} metalness={0.04} />
-      </mesh>
-
-      {/* tan leather blotter with an olive felt pad */}
-      <RoundedBox args={[9.6, 0.02, 6.6]} radius={0.008} smoothness={3} position={[0, 0.01, 0.1]} receiveShadow>
-        <meshStandardMaterial map={tan} roughness={0.6} />
-      </RoundedBox>
-      <RoundedBox args={[9.0, 0.012, 6.0]} radius={0.006} smoothness={3} position={[0, 0.026, 0.1]} receiveShadow>
-        <meshStandardMaterial map={felt} roughness={0.95} />
-      </RoundedBox>
+      <Prop url={MODELS.desk} place={PLACE.desk} />
 
       {/* warm wood-panelled wall */}
       <mesh position={[0, 3, -5.0]}>
@@ -74,32 +75,14 @@ export const Room = memo(function Room({ nameplate: showNameplate = true }: { na
         <meshBasicMaterial color={palette.brass.rail} toneMapped={false} />
       </mesh>
 
-      {/* round wall clock */}
-      <group position={[3.9, 3.9, -4.78]}>
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.7, 0.7, 0.1, 40]} />
-          <meshStandardMaterial {...BRASS} />
-        </mesh>
-        <mesh position={[0, 0, 0.056]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.6, 0.6, 0.01, 40]} />
-          <meshStandardMaterial color={palette.clock.face} roughness={0.8} />
-        </mesh>
-        <mesh position={[0, 0.18, 0.07]}>
-          <boxGeometry args={[0.04, 0.36, 0.01]} />
-          <meshStandardMaterial color={palette.clock.hands} />
-        </mesh>
-        <mesh position={[0.14, 0.02, 0.07]} rotation={[0, 0, 1.2]}>
-          <boxGeometry args={[0.04, 0.28, 0.01]} />
-          <meshStandardMaterial color={palette.clock.hands} />
-        </mesh>
-      </group>
+      <Prop url={MODELS.clock} place={PLACE.clock} />
 
       <Laptop />
 
       {showNameplate && (
         <>
         {/* brass nameplate with its own warm light so the engraving catches the eye */}
-        <group position={[-2.1, 0.03, 2.75]} rotation={[0, 0.18, 0]}>
+        <group position={[-2.1, 0.03, 2.2]} rotation={[0, 0.18, 0]}>
           <RoundedBox args={[2.1, 0.12, 0.55]} radius={0.02} smoothness={3} position={[0, 0.06, 0]} castShadow receiveShadow>
             <meshStandardMaterial color={palette.nameplate.base} roughness={0.5} />
           </RoundedBox>
@@ -152,22 +135,7 @@ export const Room = memo(function Room({ nameplate: showNameplate = true }: { na
         })}
       </group>
 
-      {/* potted plant */}
-      <group position={[-3.9, 0.03, -1.6]}>
-        <mesh position={[0, 0.22, 0]} castShadow>
-          <cylinderGeometry args={[0.34, 0.26, 0.44, 24]} />
-          <meshStandardMaterial color={palette.plant.pot} roughness={0.8} />
-        </mesh>
-        {Array.from({ length: 7 }, (_, i) => {
-          const a = (i / 7) * Math.PI * 2;
-          return (
-            <mesh key={i} position={[Math.cos(a) * 0.22, 0.78 + (i % 3) * 0.12, Math.sin(a) * 0.22]} rotation={[Math.sin(a) * 0.6, 0, -Math.cos(a) * 0.6]} scale={[0.14, 0.5, 0.06]} castShadow>
-              <sphereGeometry args={[1, 12, 12]} />
-              <meshStandardMaterial color={i % 2 ? palette.plant.leafA : palette.plant.leafB} roughness={0.7} />
-            </mesh>
-          );
-        })}
-      </group>
+      <Prop url={MODELS.plant} place={PLACE.plant} />
     </group>
   );
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { ArrowUpRight, Check, ChevronDown, Download, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { folderTint, folderTone } from "../lib/tone";
@@ -71,7 +71,7 @@ export function DocumentCard({ file: x, tone, selected: s, onToggle, onExpanded 
 
       <AnimatePresence initial={false}>
         {s && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -118,7 +118,7 @@ export function DocumentCard({ file: x, tone, selected: s, onToggle, onExpanded 
                 </div>
               )}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

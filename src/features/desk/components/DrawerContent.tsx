@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { folders } from "../data/folders";
@@ -93,7 +93,7 @@ export function DrawerContent({ compact = false }: { compact?: boolean }) {
       >
         <div className="flex flex-col gap-3">
           {c.files.map((x, j) => (
-            <motion.div
+            <m.div
               // restart the entrance whenever a different folder is shown
               key={`${c.id}-${x.name}`}
               ref={(el) => {
@@ -105,7 +105,7 @@ export function DrawerContent({ compact = false }: { compact?: boolean }) {
               style={!open ? { opacity: 1 } : undefined}
             >
               <DocumentCard file={x} tone={c.id} selected={j === file} onToggle={() => toggle(j)} onExpanded={() => alignTo(j, "smooth")} />
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </div>

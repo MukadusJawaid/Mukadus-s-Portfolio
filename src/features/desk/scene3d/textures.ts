@@ -50,19 +50,6 @@ export function woodTexture(base: string = palette.wood.plank, repeat: [number, 
   return finish(c, repeat);
 }
 
-/** Leather / felt with fine pores. */
-export function leatherTexture(base: string = palette.mat.pores) {
-  const { c, g } = makeCanvas(512, 512);
-  const r = rng(11);
-  g.fillStyle = base;
-  g.fillRect(0, 0, 512, 512);
-  for (let i = 0; i < 9000; i++) {
-    g.fillStyle = `rgba(${r() > 0.5 ? "255,255,255" : "0,0,0"},${r() * 0.05})`;
-    g.fillRect(r() * 512, r() * 512, 1 + r() * 2, 1 + r() * 2);
-  }
-  return finish(c, [3, 2]);
-}
-
 const TYPE = '"Courier New", Courier, ui-monospace, monospace';
 
 /** Engraved brass plate. Light parts of the texture are also used as a faint glow. */

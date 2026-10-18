@@ -1,8 +1,8 @@
 "use client";
 
 import { Fragment, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { m } from "framer-motion";
+import dynamic from "next/dynamic";
 import { useStageInsets } from "../lib/insets";
 import { terminalWidth, WIDE_QUERY } from "../lib/layout";
 import { useMediaQuery, useViewportWidth } from "../lib/media";
@@ -12,6 +12,9 @@ import { DrawerContent } from "./DrawerContent";
 import { ResizeHandle } from "./ResizeHandle";
 import { StagePanel } from "./StagePanel";
 import { TerminalPanel } from "./TerminalPanel";
+import { MotionProvider } from "./MotionProvider";
+
+const TermSheet = dynamic(() => import("./TermSheet"), { ssr: false });
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -45,78 +48,78 @@ export function DeskExperience() {
   }, []);
 
   return (
-    <main className="relative h-dvh overflow-hidden p-2 sm:p-3">
-      <div className="absolute inset-2 sm:inset-3">
-        <StagePanel className="h-full w-full" />
-      </div>
+    <MotionProvider>
+      <main className="relative h-dvh overflow-hidden p-2 sm:p-3">
+        <div className="absolute inset-2 sm:inset-3">
+          <StagePanel className="h-full w-full" />
+        </div>
 
-      {wide ? (
-        // keyed per layout: React must not reuse the same panel element across the breakpoint, or the small-screen
-        // version's animated height/transform would be left behind on the wide one
-        <Fragment key="wide">
-          <motion.div
-            aria-hidden={!terminal}
-            inert={!terminal}
-            initial={false}
-            animate={{ x: terminal ? 0 : -(tw + 48), opacity: terminal ? 1 : 0 }}
-            transition={{ duration: 0.6, ease }}
-            className="absolute bottom-3 left-3 top-3 z-20"
-            style={{ width: tw }}
-          >
-            <TerminalPanel className="h-full" onCollapse={toggleTerminal} />
-            <ResizeHandle width={tw} />
-          </motion.div>
-
-          <motion.aside
-            aria-label="Documents"
-            aria-hidden={!open}
-            inert={!open}
-            initial={false}
-            animate={{ x: open ? 0 : drawerW + 48, opacity: open ? 1 : 0 }}
-            transition={{ duration: 0.6, ease }}
-            className="absolute bottom-3 right-3 top-3 z-30 overflow-hidden rounded-[22px] border border-white/10 bg-panel-raised/95 shadow-2xl"
-            style={{ width: drawerW }}
-          >
-            <DrawerContent />
-          </motion.aside>
-        </Fragment>
-      ) : (
-        <Fragment key="narrow">
-          {/* terminal: a sheet the visitor opens on purpose; it never covers the desk by default */}
-          <Sheet open={termSheetCh === ch} onOpenChange={(o) => !o && closeTermSheet()}>
-            <SheetContent
-              side="bottom"
-              showCloseButton={false}
-              className="mx-auto max-w-2xl border-0 bg-transparent p-2 text-white shadow-none duration-500 data-[side=bottom]:h-[min(600px,72dvh)] data-[side=bottom]:max-h-[72dvh]"
+        {wide ? (
+          // keyed per layout: React must not reuse the same panel element across the breakpoint, or the small-screen
+          // version's animated height/transform would be left behind on the wide one
+          <Fragment key="wide">
+            <m.div
+              aria-hidden={!terminal}
+              inert={!terminal}
+              initial={false}
+              animate={{
+                x: terminal ? 0 : -(tw + 48),
+                opacity: terminal ? 1 : 0,
+              }}
+              transition={{ duration: 0.6, ease }}
+              className="absolute bottom-3 left-3 top-3 z-20"
+              style={{ width: tw }}
             >
-              <SheetTitle className="sr-only">Terminal</SheetTitle>
-              <TerminalPanel className="h-full" onCollapse={closeTermSheet} closeAsCross />
-            </SheetContent>
-          </Sheet>
+              <TerminalPanel className="h-full" onCollapse={toggleTerminal} />
+              <ResizeHandle width={tw} />
+            </m.div>
 
-          {/* details: a panel that does not block the page, so the laptop above it stays tappable */}
-          <motion.aside
-            aria-label="Documents"
-            aria-hidden={!open}
-            inert={!open}
-            initial={false}
-            animate={{ y: open ? 0 : sheetH + 48, opacity: open ? 1 : 0, height: sheetH }}
-            transition={{ duration: 0.55, ease }}
-            className="absolute inset-x-2 bottom-2 z-30 mx-auto flex max-w-2xl flex-col overflow-hidden rounded-[26px] border border-white/10 bg-panel-raised/95 shadow-2xl sm:inset-x-3 sm:bottom-3"
-          >
-            <button
-              onClick={toggleSheetExpanded}
-              aria-label="Expand or collapse details"
-              className="grid h-8 shrink-0 place-items-center outline-none focus-visible:bg-white/5"
+            <m.aside
+              aria-label="Documents"
+              aria-hidden={!open}
+              inert={!open}
+              initial={false}
+              animate={{ x: open ? 0 : drawerW + 48, opacity: open ? 1 : 0 }}
+              transition={{ duration: 0.6, ease }}
+              className="absolute bottom-3 right-3 top-3 z-30 overflow-hidden rounded-[22px] border border-white/10 bg-panel-raised/95 shadow-2xl"
+              style={{ width: drawerW }}
             >
-              <span className="h-1 w-10 rounded-full bg-white/25" />
-            </button>
-            <div className="min-h-0 flex-1">
-              <DrawerContent compact />
-            </div>
-          </motion.aside>
-        </Fragment>
-      )}
-    </main>
+              <DrawerContent />
+            </m.aside>
+          </Fragment>
+        ) : (
+          <Fragment key="narrow">
+            {/* terminal: a sheet the visitor opens on purpose; it never covers the desk by default */}
+            <TermSheet open={termSheetCh === ch} onClose={closeTermSheet} />
+
+            {/* details: a panel that does not block the page, so the laptop above it stays tappable */}
+            <m.aside
+              aria-label="Documents"
+              aria-hidden={!open}
+              inert={!open}
+              initial={false}
+              animate={{
+                y: open ? 0 : sheetH + 48,
+                opacity: open ? 1 : 0,
+                height: sheetH,
+              }}
+              transition={{ duration: 0.55, ease }}
+              className="absolute inset-x-2 bottom-2 z-30 mx-auto flex max-w-2xl flex-col overflow-hidden rounded-[26px] border border-white/10 bg-panel-raised/95 shadow-2xl sm:inset-x-3 sm:bottom-3"
+            >
+              <button
+                onClick={toggleSheetExpanded}
+                aria-label="Expand or collapse details"
+                className="grid h-8 shrink-0 place-items-center outline-none focus-visible:bg-white/5"
+              >
+                <span className="h-1 w-10 rounded-full bg-white/25" />
+              </button>
+              <div className="min-h-0 flex-1">
+                <DrawerContent compact />
+              </div>
+            </m.aside>
+          </Fragment>
+        )}
+      </main>
+    </MotionProvider>
   );
 }

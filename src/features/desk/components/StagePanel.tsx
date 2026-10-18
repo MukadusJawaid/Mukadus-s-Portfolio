@@ -2,10 +2,15 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { ArrowLeft, Minus, Plus, ScanSearch, SquareTerminal } from "lucide-react";
+import Image from "next/image";
+import { TransitionLink } from "@/features/transition/TransitionLink";
+import { ArrowLeft, Globe, Minus, Plus, ScanSearch, SquareTerminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { folders } from "../data/folders";
+import { DeskBuddy } from "./DeskBuddy";
+import { deskSession } from "../lib/session";
+import { useStartOnInteraction } from "../lib/useStartOnInteraction";
 import { useStageInsets } from "../lib/insets";
 import { folderTone } from "../lib/tone";
 import { useDeskStore } from "../store/useDeskStore";
@@ -28,27 +33,45 @@ export function StagePanel({ className = "" }: { className?: string }) {
   const { wide, left, right, bottom } = useStageInsets();
   const openTermSheet = useLayoutStore((s) => s.openTermSheet);
   const [ready, setReady] = useState(false);
+  // The 3D scene is a large bundle plus a lot of setup work. It starts when the visitor first moves, touches or types
+  // (so the page itself loads fast), and a still image of the desk fills the stage until it is ready.
+  const mount3d = useStartOnInteraction();
+  // coming back from the website the scene is already prefetched, and a stretched still image would look blurry on a big screen
+  const [returning] = useState(deskSession.returning);
   const [failed, setFailed] = useState(false);
+
   const cur = folders[ch];
   const f = file >= 0 ? cur.files[file] : null;
   const overview = ch === 0;
 
   return (
     <section aria-label="Desk" className={`relative min-h-0 min-w-0 overflow-hidden rounded-[22px] bg-stage ${className}`}>
-      {!failed && (
+      {/* the still image of the desk: shows instantly, then fades out as the live scene fades in */}
+      {!failed && !returning && (
+        // Placed with CSS only (not the JavaScript layout numbers), so it is in the right place in the very first paint on
+        // every screen size and the largest paint does not wait for the page's scripts to run. On wide screens it sits
+        // beside the terminal, about where the live scene will put the laptop.
+        <div
+          className="absolute inset-y-0 left-0 right-0 transition-opacity duration-700 min-[992px]:left-[clamp(372px,calc(27vw+12px),532px)]"
+          style={{ opacity: ready ? 0 : 1 }}
+          aria-hidden
+        >
+          <Image src="/desk-poster-4.jpg" alt="" fill unoptimized preload fetchPriority="high" className="object-cover" />
+        </div>
+      )}
+
+      {!failed && mount3d && (
         <div className="absolute inset-0 transition-opacity duration-700" style={{ opacity: ready ? 1 : 0 }}>
           <DeskScene onReady={() => setReady(true)} onFail={() => setFailed(true)} />
         </div>
       )}
 
-      {!ready && !failed && (
-        <div
-          className="absolute inset-y-0 flex flex-col items-center justify-center gap-4 font-mono text-xs text-stage-fg"
-          style={{ left, right }}
-          role="status"
-        >
-          <span className="size-8 animate-spin rounded-full border-2 border-stage-fg/25 border-t-link" aria-hidden />
-          setting up the desk…
+      {mount3d && !ready && !failed && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-20 z-[5] flex justify-center" style={{ left, right }} role="status">
+          <span className="inline-flex items-center gap-2.5 rounded-full border border-white/15 bg-black/45 px-4 py-2 font-mono text-xs text-white/85">
+            <span className="size-3.5 animate-spin rounded-full border-2 border-white/25 border-t-link" aria-hidden />
+            setting up the 3D desk…
+          </span>
         </div>
       )}
 
@@ -78,6 +101,8 @@ export function StagePanel({ className = "" }: { className?: string }) {
         ))}
       </nav>
 
+      <DeskBuddy />
+
       <div className="pointer-events-none absolute inset-0 z-[3] opacity-[.12] mix-blend-overlay" style={{ backgroundImage: GRAIN }} />
       <div className="pointer-events-none absolute inset-0 z-[3] [background:radial-gradient(ellipse_80%_75%_at_50%_50%,transparent_55%,var(--vignette)_100%)]" />
 
@@ -90,7 +115,7 @@ export function StagePanel({ className = "" }: { className?: string }) {
             variant="outline"
             onClick={() => (wide ? toggleTerminal() : openTermSheet(ch))}
             aria-label="Show terminal"
-            className="h-9 shrink-0 rounded-full border-white/15 bg-black/30 px-3 font-mono text-xs backdrop-blur-md hover:bg-white/10 sm:h-10 sm:text-body-sm"
+            className="h-9 shrink-0 rounded-full border-white/15 bg-black/30 px-3 font-mono text-xs backdrop-blur-md hover:bg-white/10 lg:h-10 lg:text-body-sm"
           >
             <SquareTerminal /> <span className="hidden sm:inline">terminal</span>
           </Button>
@@ -99,26 +124,38 @@ export function StagePanel({ className = "" }: { className?: string }) {
           <Button
             variant="outline"
             onClick={() => go(0)}
-            className="h-9 shrink-0 rounded-full border-white/15 bg-black/30 px-3 font-mono text-xs backdrop-blur-md hover:bg-white/10 sm:h-10 sm:text-body-sm"
+            className="h-9 shrink-0 rounded-full border-white/15 bg-black/30 px-3 font-mono text-xs backdrop-blur-md hover:bg-white/10 lg:h-10 lg:text-body-sm"
           >
             <ArrowLeft /> <span className="hidden sm:inline">back to desk</span>
           </Button>
         )}
-        <div className="pointer-events-none inline-flex h-9 min-w-0 items-center gap-2 rounded-full border border-white/15 bg-panel-chip/60 px-3 font-mono text-xs text-stage-chip-fg backdrop-blur-md sm:h-10 sm:px-4 sm:text-sm">
+        <div className="pointer-events-none inline-flex h-9 min-w-0 items-center gap-2 rounded-full border border-white/15 bg-panel-chip/60 px-3 font-mono text-xs text-stage-chip-fg backdrop-blur-md lg:h-10 lg:px-4 lg:text-sm">
           <span className="size-2 shrink-0 rounded-full" style={{ background: folderTone(cur.id), boxShadow: `0 0 10px ${folderTone(cur.id)}` }} />
           <span className="truncate">
             <span className="hidden sm:inline">mukadusjawaid.dev</span>
             <span className="text-white">{overview ? "/" : `/${cur.id}${f ? "/" + f.name : ""}`}</span>
           </span>
         </div>
+        <TransitionLink
+          href="/site"
+          label="cd ~/website"
+          className="pointer-events-auto ml-auto inline-flex h-9 shrink-0 items-center gap-2 rounded-full border border-white/15 bg-black/30 px-3 font-mono text-xs text-white backdrop-blur-md transition hover:border-link/60 hover:bg-white/10 lg:h-10 lg:text-body-sm"
+        >
+          <Globe className="size-4" /> <span className="hidden sm:inline">go to website</span>
+          <span className="sm:hidden">web</span>
+        </TransitionLink>
       </div>
 
-      {/* zoom controls and hint, centred in the free space between the panels */}
+      {/* zoom controls and hint: centred in the free space between the panels on wide screens; on small screens the controls
+          stand in a column at the right edge so they never cover the laptop screen */}
       <div
-        className="pointer-events-none absolute z-[6] flex flex-col items-center gap-2.5 transition-[left,right,bottom] duration-500"
-        style={{ left: left + 16, right: right + 16, bottom: bottom ? bottom + 4 : 16 }}
+        className={cn(
+          "pointer-events-none absolute z-[6] flex flex-col gap-2.5 transition-[left,right,bottom] duration-500",
+          wide ? "items-center" : "items-end",
+        )}
+        style={wide ? { left: left + 16, right: right + 16, bottom: bottom ? bottom + 4 : 16 } : { left: 12, right: 12, bottom: (bottom || 0) + 12 }}
       >
-        <div className="pointer-events-auto flex gap-1 rounded-2xl border border-white/15 bg-black/40 p-1 backdrop-blur-md" role="group" aria-label="Camera controls">
+        <div className={cn("pointer-events-auto flex gap-1 rounded-2xl border border-white/15 bg-black/40 p-1 backdrop-blur-md", !wide && "flex-col")} role="group" aria-label="Camera controls">
           {(
             [
               ["Zoom out", Minus, () => view?.zoomOut()],
@@ -131,7 +168,7 @@ export function StagePanel({ className = "" }: { className?: string }) {
             </Button>
           ))}
         </div>
-        <p className={cn("px-2 text-center text-xs text-stage-fg sm:text-sm", bottom > 0 && "hidden sm:block")}>
+        <p className={cn("self-center px-2 text-center text-xs text-stage-fg sm:text-sm", !wide && bottom > 0 && "hidden")}>
           {overview ? "Drag to look around · scroll or use + − to zoom · click a folder on the laptop" : "Click a file on the laptop to read it · drag to look around"}
         </p>
       </div>

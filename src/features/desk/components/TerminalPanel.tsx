@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, CornerDownLeft, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronUp, CornerDownLeft, X } from "lucide-react";
 import { folders } from "../data/folders";
 import { shell } from "../data/scene3d";
 import { shortPath } from "../lib/prompt";
@@ -27,6 +27,57 @@ export function TerminalPanel({ className = "", onCollapse, closeAsCross }: Prop
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
 
+  // Like a real shell: the up and down arrows (or the two buttons on small screens) walk through the commands you typed
+  // earlier, and the history survives "clear". Down past the newest one brings back what you were typing.
+  const past = useRef<string[]>([]);
+  const lastCmd = useRef<unknown>(null);
+  const at = useRef(-1);
+  const draft = useRef("");
+  useEffect(() => {
+    const last = log.findLast((l) => l.k === "cmd");
+    if (last && last !== lastCmd.current && last.k === "cmd") {
+      lastCmd.current = last;
+      if (last.text.trim() && past.current.at(-1) !== last.text) past.current.push(last.text);
+    }
+  }, [log]);
+  const step = (dir: -1 | 1) => {
+    const list = past.current;
+    if (!list.length) return;
+    if (at.current < 0) draft.current = value;
+    if (dir < 0) at.current = at.current < 0 ? list.length - 1 : Math.max(0, at.current - 1);
+    else at.current = at.current >= 0 && at.current < list.length - 1 ? at.current + 1 : -1;
+    setValue(at.current < 0 ? draft.current : list[at.current]);
+    inputRef.current?.focus({ preventScroll: true });
+  };
+
+  // the arrows work even when the prompt is not focused (as long as the terminal is showing and you are not typing elsewhere)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+      if ((e.target as HTMLElement).closest("input, textarea, select, [contenteditable]")) return;
+      const field = inputRef.current;
+      if (!field || field.closest("[inert]") || !field.offsetParent) return;
+      e.preventDefault();
+      step(e.key === "ArrowUp" ? -1 : 1);
+    };
+    addEventListener("keydown", onKey);
+    return () => removeEventListener("keydown", onKey);
+  });
+
+  // Tab finishes what you started: commands, folder names after "cd", file names after "cat"
+  const complete = () => {
+    const m = /^(\S*)(?:\s+(\S*))?$/.exec(value.trimStart());
+    if (!m) return;
+    const [, word, arg] = m;
+    const pool = arg === undefined ? ["ls", "cd", "cat", "clear", "help"] : word === "cd" ? ["..", ...folders.slice(1).map((f) => f.id)] : word === "cat" ? cur.files.map((f) => f.name) : [];
+    const typed = arg ?? word;
+    const hits = pool.filter((p) => p.startsWith(typed));
+    if (!hits.length) return;
+    let common = hits[0];
+    for (const h of hits) while (!h.startsWith(common)) common = common.slice(0, -1);
+    setValue(arg === undefined ? (hits.length === 1 ? `${common} ` : common) : `${word} ${common}`);
+  };
+
   // like a real terminal, it takes keystrokes as soon as it is open. In the small-screen sheet, wait for the sheet's
   // own focus handling to finish first.
   const hasCollapse = Boolean(onCollapse);
@@ -46,7 +97,7 @@ export function TerminalPanel({ className = "", onCollapse, closeAsCross }: Prop
   return (
     <section
       aria-label="Terminal"
-      className={`flex min-h-0 flex-col overflow-hidden rounded-[22px] border border-white/10 bg-panel/95 shadow-2xl ${className}`}
+      className={`relative flex min-h-0 flex-col overflow-hidden rounded-[22px] border border-white/10 bg-panel/95 shadow-2xl ${className}`}
     >
       {/* window chrome */}
       <div className="flex h-11 shrink-0 items-center gap-3 border-b border-white/[.07] px-4">
@@ -94,18 +145,22 @@ export function TerminalPanel({ className = "", onCollapse, closeAsCross }: Prop
           if ((e.target as HTMLElement).closest("button, a, input") || window.getSelection()?.toString()) return;
           inputRef.current?.focus({ preventScroll: true });
         }}
-        className="min-h-0 flex-1 cursor-text overflow-y-auto px-4 py-4 font-mono text-caption leading-[1.6] [scrollbar-color:var(--scrollbar)_transparent] [scrollbar-width:thin]"
+        className="min-h-0 flex-1 cursor-text overflow-y-auto px-4 py-4 max-lg:pb-20 font-mono text-caption leading-[1.6] [scrollbar-color:var(--scrollbar)_transparent] [scrollbar-width:thin]"
       >
         {log.map((l, i) => (
           <TerminalLine key={i} line={l} onGo={go} onFile={openDoc} />
         ))}
 
         <form
+          id="term-form"
           className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-0.5 first:mt-0"
           onSubmit={(e) => {
             e.preventDefault();
+            const typed = value.trim();
+            if (typed && past.current.at(-1) !== typed) past.current.push(typed); // also commands such as "clear", which wipe the log
             run(value);
             setValue("");
+            at.current = -1;
           }}
         >
           <label htmlFor="cmd" className="flex shrink-0 flex-wrap items-baseline gap-x-2">
@@ -124,6 +179,16 @@ export function TerminalPanel({ className = "", onCollapse, closeAsCross }: Prop
               onChange={(e) => setValue(e.target.value)}
               // like a real terminal: Ctrl+L (or Cmd+K on a Mac) clears the screen
               onKeyDown={(e) => {
+                if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                  e.preventDefault();
+                  step(e.key === "ArrowUp" ? -1 : 1);
+                  return;
+                }
+                if (e.key === "Tab" && value.trim()) {
+                  e.preventDefault();
+                  complete();
+                  return;
+                }
                 if ((e.ctrlKey && e.key === "l") || (e.metaKey && e.key === "k")) {
                   e.preventDefault();
                   run("clear");
@@ -135,15 +200,36 @@ export function TerminalPanel({ className = "", onCollapse, closeAsCross }: Prop
               spellCheck={false}
             />
           </div>
-          <button
-            type="submit"
-            aria-label="Send command"
-            title="Send"
-            className="grid size-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[.06] text-fg-secondary transition hover:border-link/50 hover:text-white lg:hidden"
-          >
-            <CornerDownLeft className="size-4" />
-          </button>
         </form>
+      </div>
+      {/* small screens: history and send buttons stay in the bottom-right corner of the terminal, out of the typing line */}
+      <div className="absolute bottom-3 right-3 z-10 flex gap-1 rounded-2xl border border-white/10 bg-panel/90 p-1 backdrop-blur-md lg:hidden">
+        {(
+          [
+            ["Previous command", -1, ChevronUp],
+            ["Next command", 1, ChevronDown],
+          ] as const
+        ).map(([label, dir, Icon]) => (
+          <button
+            key={label}
+            type="button"
+            aria-label={label}
+            title={label}
+            onClick={() => step(dir)}
+            className="grid size-9 place-items-center rounded-xl border border-white/10 bg-white/[.06] text-fg-secondary transition hover:border-link/50 hover:text-white active:scale-95"
+          >
+            <Icon className="size-4" />
+          </button>
+        ))}
+        <button
+          type="submit"
+          form="term-form"
+          aria-label="Send command"
+          title="Send"
+          className="grid size-9 place-items-center rounded-xl border border-link/40 bg-link/15 text-link transition hover:text-white active:scale-95"
+        >
+          <CornerDownLeft className="size-4" />
+        </button>
       </div>
     </section>
   );

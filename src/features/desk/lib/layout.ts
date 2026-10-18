@@ -11,7 +11,7 @@ export const GAP = 12;
 /** space at the top of the stage taken by the back button and address pill */
 export const TOP_PX = 72;
 
-export const TERMINAL_MIN = 320;
+const TERMINAL_MIN = 320;
 const terminalMax = (viewportWidth: number) => Math.min(760, Math.round(viewportWidth * 0.55));
 
 /** Width of the floating terminal on wide screens: the visitor's choice, or 27% of the window. */

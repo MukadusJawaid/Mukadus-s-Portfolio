@@ -1,0 +1,925 @@
+/*
+ * The scrolling website. Every colour is a token from styles/tokens.css; each section sets its own
+ * accent through --acc (the folder colour of the same name on the desk), so the two experiences match.
+ */
+
+.sx {
+  --acc: var(--ice);
+  --acc-soft: color-mix(in oklab, var(--acc) 14%, transparent);
+  --acc-line: color-mix(in oklab, var(--acc) 42%, transparent);
+  --alt: color-mix(in oklab, var(--bg) 82%, white 4%);
+  --card: var(--panel-raised);
+  --ease: var(--ease-out);
+  position: relative;
+  background: var(--bg);
+  color: var(--fg);
+  overflow-x: clip;
+  font-size: 16px;
+  line-height: 1.55;
+  scroll-behavior: smooth;
+}
+.sx * { box-sizing: border-box; }
+.sx a { color: inherit; text-decoration: none; }
+.sx :focus-visible { outline: 2px solid var(--ice); outline-offset: 3px; border-radius: 6px; }
+.sx-mono { font-family: var(--font-mono), ui-monospace, Menlo, monospace; }
+.sx-wrap { max-width: 1240px; margin: 0 auto; padding: 0 32px; }
+
+/* ── Background patterns: pure CSS, tinted by the section accent ───────────────── */
+.sx-pat { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.sx-pat-grid {
+  background-image:
+    linear-gradient(var(--line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 35%, #000 20%, transparent 75%);
+}
+.sx-pat-dots {
+  background-image: radial-gradient(circle, var(--line-strong) 1.1px, transparent 1.5px);
+  background-size: 26px 26px;
+  mask-image: radial-gradient(ellipse 90% 80% at 80% 20%, #000 10%, transparent 70%);
+}
+.sx-pat-diag {
+  background-image: repeating-linear-gradient(135deg, var(--line-soft) 0 1px, transparent 1px 18px);
+  mask-image: linear-gradient(180deg, #000, transparent 85%);
+}
+.sx-pat-glow {
+  background:
+    radial-gradient(640px 380px at 12% 0%, var(--acc-soft), transparent 70%),
+    radial-gradient(520px 320px at 100% 100%, color-mix(in oklab, var(--acc) 9%, transparent), transparent 70%);
+}
+.sx-above { position: relative; z-index: 1; }
+
+/* ── Nav ──────────────────────────────────────────────────────────────────────── */
+.sx-nav {
+  position: fixed; inset: 0 0 auto 0; z-index: 50; height: 64px; display: flex; align-items: center;
+  border-bottom: 1px solid transparent; transition: background .3s, border-color .3s;
+}
+.sx-nav.on { background: color-mix(in oklab, var(--bg) 94%, transparent); border-color: var(--line); }
+.sx-nav .sx-wrap { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.sx-logo { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--fg-soft); }
+.sx-logo i { width: 8px; height: 8px; border-radius: 50%; background: var(--ice); box-shadow: 0 0 12px var(--ice); }
+.sx-links { display: flex; align-items: center; gap: 24px; font-size: 14.5px; color: var(--fg-muted); }
+.sx-links a { transition: color .2s; }
+.sx-links a:hover, .sx-links a.act { color: var(--fg); }
+
+.sx-btn {
+  display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 20px; border-radius: 999px;
+  font-size: 15px; font-weight: 500; border: 1px solid var(--line-strong); background: var(--veil);
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.sx-btn:hover { border-color: var(--acc-line); box-shadow: 0 0 26px var(--acc-soft); }
+.sx-btn.pri { background: var(--ice); color: var(--on-accent); border-color: var(--ice); font-weight: 600; }
+.sx-btn.sm { height: 38px; padding: 0 16px; font-size: 14px; }
+
+/* dot nav */
+
+/* reveal */
+.sx-rv { opacity: 0; transform: translateY(28px); transition: opacity .9s var(--ease), transform .9s var(--ease); transition-delay: calc(var(--d, 0) * 90ms); }
+.sx-rv.in { opacity: 1; transform: none; }
+/* the hero reveals with CSS alone, so it appears on first paint instead of waiting for scripts to run */
+.sx-hero .sx-rv { opacity: 1; transform: none; transition: none; animation: sx-up .9s var(--ease) backwards; animation-delay: calc(var(--d, 0) * 90ms); }
+@keyframes sx-up { from { opacity: 0; transform: translateY(28px); } }
+
+/* ── Sections ─────────────────────────────────────────────────────────────────── */
+.sx-band { position: relative; padding: 120px 0; border-top: 1px solid var(--line); overflow: clip; }
+.sx-band.alt { background: var(--alt); }
+.sx-band#contact { padding-bottom: 48px; }
+/* sections far below the first screen are not laid out or painted until they come near, which keeps the first load light (the project stack and pinned experience are left out because they rely on sticky positioning) */
+#skills.sx-band, #education.sx-band, #about.sx-band, #contact.sx-band { content-visibility: auto; contain-intrinsic-size: auto 760px; }
+.sx-band::before, .sx-exp::before {
+  content: ""; position: absolute; left: 50%; top: -1px; width: 260px; height: 1px; transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, var(--acc), transparent); opacity: .8; z-index: 2;
+}
+.sx-split { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 70px; align-items: start; }
+.sx-side { position: sticky; top: 120px; }
+.sx-side .sx-side { position: static; }
+.sx-label { display: flex; align-items: center; gap: 10px; font-family: var(--font-mono), monospace; font-size: 13px; color: var(--acc); }
+.sx-label::before { content: ""; width: 22px; height: 1px; background: var(--acc); }
+.sx h2 { margin: 16px 0 0; font-size: clamp(28px, 3vw, 42px); line-height: 1.04; letter-spacing: -.04em; font-weight: 600; }
+.sx-side p { margin: 18px 0 0; color: var(--fg-muted); max-width: 30ch; }
+
+/* ── Hero ─────────────────────────────────────────────────────────────────────── */
+.sx-hero { position: relative; min-height: 100svh; display: flex; align-items: center; padding: 120px 0 90px; overflow: hidden; }
+.sx-hero h1 { margin: 0; font-size: clamp(30px, 3.9vw, 54px); line-height: 1.06; letter-spacing: -.035em; font-weight: 600; max-width: 17ch; will-change: transform; }
+.sx-hero h1 span { color: var(--fg-muted); }
+.sx-lede { margin: 22px 0 0; max-width: 500px; font-size: clamp(15px, 1.3vw, 17px); line-height: 1.55; color: var(--fg-muted); }
+.sx-cta { margin-top: 36px; display: flex; gap: 12px; flex-wrap: wrap; }
+.sx-pill {
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 26px; padding: 5px 14px; border-radius: 999px;
+  font-family: var(--font-mono), monospace; font-size: 12.5px; color: var(--fg-soft);
+  border: 1px solid var(--acc-line); background: var(--acc-soft);
+}
+.sx-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px var(--ok); }
+/* a faint laptop-tile cluster on the right of the hero echoes the desk */
+@keyframes sx-float { 50% { transform: translateY(-10px); } }
+
+/* ── Project cards ────────────────────────────────────────────────────────────── */
+.sx-stack { position: relative; }
+.sx-card {
+  max-width: 760px; position: sticky; top: calc(100px + min(var(--i), 5) * 20px); margin-bottom: 36px; scroll-margin-top: 100px;
+  border-radius: 26px; border: 1px solid var(--line-strong); padding: 16px 16px 24px; transform-origin: 50% 0; will-change: transform;
+  background: linear-gradient(180deg, var(--card), color-mix(in oklab, var(--card) 70%, black));
+  box-shadow: 0 30px 70px -30px rgb(0 0 0 / .85), inset 0 1px 0 rgb(255 255 255 / .05);
+}
+.sx-shot {
+  position: relative; aspect-ratio: 16 / 8; border-radius: 16px; overflow: hidden; border: 1px solid var(--line);
+  background:
+    linear-gradient(135deg, var(--acc-soft), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 31px, var(--line-soft) 31px 32px),
+    repeating-linear-gradient(90deg, transparent 0 31px, var(--line-soft) 31px 32px),
+    var(--bg);
+}
+.sx-bar { position: absolute; inset: 0 0 auto 0; height: 34px; display: flex; align-items: center; gap: 6px; padding: 0 14px; border-bottom: 1px solid var(--line); background: var(--panel); z-index: 2; }
+.sx-bar i { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
+.sx-bar i:nth-child(1) { background: var(--window-close); } .sx-bar i:nth-child(2) { background: var(--window-minimize); } .sx-bar i:nth-child(3) { background: var(--window-zoom); }
+.sx-mock { position: absolute; inset: 34px 0 0 0; display: grid; grid-template-columns: 22% 1fr; gap: 14px; padding: 18px; }
+.sx-mock b { display: block; height: 14px; border-radius: 6px; background: var(--line); margin-bottom: 10px; }
+.sx-mock b:first-child { background: var(--acc-line); }
+.sx-mock u { display: block; height: 100%; border-radius: 10px; background: var(--acc-soft); border: 1px solid var(--line); text-decoration: none; }
+.sx-mock .m { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr; gap: 12px; }
+.sx-mock .m u:first-child { grid-column: span 2; }
+.sx-big { position: absolute; right: 22px; bottom: 6px; font-size: clamp(60px, 11vw, 140px); line-height: 1; letter-spacing: -.06em; font-weight: 700; color: color-mix(in oklab, var(--acc) 22%, transparent); pointer-events: none; z-index: 1; }
+.sx-pbody { display: flex; justify-content: space-between; gap: 24px; padding: 20px 8px 0; }
+.sx-pbody h3 { margin: 0; font-size: clamp(22px, 2vw, 27px); letter-spacing: -.03em; font-weight: 600; }
+.sx-meta { margin-top: 6px; font-family: var(--font-mono), monospace; font-size: 13px; color: var(--acc); }
+.sx-d { margin: 12px 0 0; font-size: 16px; line-height: 1.5; color: var(--fg-muted); max-width: 46ch; }
+.sx-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.sx-tag { font-family: var(--font-mono), monospace; font-size: 12.5px; padding: 4px 10px; border-radius: 7px; border: 1px solid var(--acc-line); background: var(--acc-soft); color: var(--fg-soft); }
+.sx-btns { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; flex: none; }
+.sx-index { margin-top: 36px; display: flex; flex-direction: column; border-left: 1px solid var(--line); }
+.sx-index a { padding: 7px 0 7px 18px; margin-left: -1px; border-left: 1px solid transparent; font-family: var(--font-mono), monospace; font-size: 13px; color: var(--fg-dim); transition: color .25s, border-color .25s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sx-index a:hover { color: var(--fg-soft); }
+.sx-index a.on { color: var(--fg); border-left-color: var(--acc); }
+
+/* ── Experience: pinned, advances as you scroll ───────────────────────────────── */
+.sx-exp { position: relative; height: calc(var(--n) * 85vh + 100vh); border-top: 1px solid var(--line); }
+.sx-pin { position: sticky; top: 0; height: 100svh; display: flex; align-items: center; overflow: clip; }
+.sx-pin .sx-wrap { width: 100%; position: relative; z-index: 1; }
+.sx-egrid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 70px; align-items: center; }
+.sx-ebig { position: relative; height: 1.1em; margin-top: 40px; font-size: clamp(36px, 4.4vw, 60px); line-height: 1; letter-spacing: -.045em; font-weight: 600; }
+.sx-ebig span { position: absolute; left: 0; top: 0; white-space: nowrap; opacity: 0; transform: translateY(40px); transition: opacity .6s var(--ease), transform .7s var(--ease); }
+.sx-ebig span.on { opacity: 1; transform: none; }
+.sx-ebig span.past { opacity: 0; transform: translateY(-40px); }
+.sx-rail { margin-top: 34px; display: flex; flex-direction: column; gap: 2px; }
+.sx-rail button { display: flex; align-items: center; gap: 14px; padding: 10px 0; font: inherit; font-size: 15.5px; color: var(--fg-dim); background: none; border: 0; cursor: pointer; text-align: left; transition: color .3s; }
+.sx-rail button i { width: 26px; height: 2px; border-radius: 2px; background: var(--line-strong); transition: width .5s var(--ease), background .3s; }
+.sx-rail button.on { color: var(--fg); }
+.sx-rail button.on i { width: 52px; background: var(--acc); }
+.sx-panes { position: relative; min-height: 460px; border-left: 1px solid var(--line-strong); padding-left: 44px; }
+.sx-pane { position: absolute; inset: 0 0 0 44px; opacity: 0; transform: translateY(34px); pointer-events: none; transition: opacity .6s var(--ease), transform .8s var(--ease); }
+.sx-pane.on { opacity: 1; transform: none; pointer-events: auto; }
+.sx-pane.past { transform: translateY(-34px); }
+.sx-role { font-size: clamp(22px, 2.4vw, 32px); line-height: 1.12; letter-spacing: -.03em; font-weight: 600; }
+.sx-co { margin-top: 10px; font-family: var(--font-mono), monospace; font-size: 13.5px; color: var(--acc); }
+.sx-pane p { margin: 14px 0 0; max-width: 56ch; color: var(--fg-muted); font-size: 16px; }
+.sx-pane ul { margin: 22px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; max-width: 600px; }
+.sx-pane li { display: flex; gap: 14px; font-size: 16px; line-height: 1.5; color: var(--fg-soft); }
+.sx-pane li::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; margin-top: 11px; background: var(--acc); }
+
+/* ── Skills, education, about, contact ────────────────────────────────────────── */
+.sx-cols { display: grid; grid-template-columns: repeat(2, 1fr); gap: 36px 40px; }
+.sx-col h3 { margin: 0; padding-bottom: 14px; border-bottom: 1px solid var(--line-strong); font-size: 20px; letter-spacing: -.02em; font-weight: 600; }
+.sx-col p { margin: 12px 0 0; font-size: 15px; color: var(--fg-muted); }
+.sx-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.sx-chip { font-family: var(--font-mono), monospace; font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--fg-soft); background: var(--veil); transition: border-color .2s, background .2s; }
+.sx-chip:hover { border-color: var(--acc-line); background: var(--acc-soft); }
+
+.sx-edu { border-top: 1px solid var(--line); }
+.sx-links-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+.sx-about p { margin: 0; font-size: 19px; line-height: 1.55; color: var(--fg-soft); max-width: none; text-wrap: pretty; }
+
+.sx-big-links { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.sx-big-links a { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 26px 6px; border-bottom: 1px solid var(--line); font-size: clamp(20px, 2.3vw, 30px); letter-spacing: -.03em; font-weight: 500; transition: padding .35s var(--ease), color .25s; }
+.sx-big-links a span { font-family: var(--font-mono), monospace; font-size: 14px; color: var(--fg-muted); letter-spacing: 0; overflow-wrap: anywhere; text-align: right; }
+.sx-big-links a:hover { padding-left: 22px; color: var(--acc); }
+
+.sx-foot { position: relative; border-top: 1px solid var(--line); padding: 14px 0; color: var(--fg-dim); font-size: 14px; }
+.sx-foot .sx-wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.sx-foot a:hover { color: var(--ice); }
+
+.sx-skip { position: absolute; left: 16px; top: -60px; z-index: 100; padding: 10px 14px; border-radius: 10px; background: var(--ice); color: var(--on-accent); font-weight: 600; }
+.sx-skip:focus { top: 12px; }
+
+@media (max-width: 900px) {
+  .sx-wrap { padding: 0 20px; }
+  .sx-band { padding: 100px 0; }
+  .sx-split, .sx-egrid { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .sx-side { position: static; }
+  .sx-card { top: calc(80px + min(var(--i), 5) * 14px); }
+  .sx-pbody { flex-direction: column; padding: 22px 6px 0; }
+  .sx-btns { flex-direction: row; align-items: center; flex-wrap: wrap; }
+  .sx-cols { grid-template-columns: 1fr; }
+  }
+@media (max-width: 560px) {
+  .sx-btn.sm.hide-sm { display: none; }
+  .sx-card { padding: 14px 14px 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sx { scroll-behavior: auto; }
+  .sx-rv { opacity: 1; transform: none; transition: none; }
+  .sx-pane, .sx-ebig span { transition: none; }
+}
+
+/* ── Project preview window ───────────────────────────────────────────────────── */
+.sx-url { margin-left: 10px; display: inline-flex; align-items: center; gap: 6px; max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--fg-dim); padding: 3px 12px; border-radius: 999px; background: var(--veil); transition: color .2s; }
+.sx-url:hover { color: var(--ice); }
+.sx-stage { position: absolute; inset: 34px 0 0 0; background: var(--bg); }
+.sx-stage img { object-fit: cover; object-position: top; opacity: 0; transition: opacity .5s var(--ease); }
+.sx-stage img.on { opacity: 1; }
+.sx-stage iframe { position: absolute; left: 0; top: 0; border: 0; background: #fff; transform-origin: 0 0; }
+.sx-gtabs { position: absolute; left: 14px; right: 14px; bottom: 14px; z-index: 3; display: flex; gap: 6px; flex-wrap: wrap; }
+.sx-gtabs button { height: 32px; padding: 0 13px; border-radius: 999px; font: inherit; font-size: 13px; cursor: pointer; background: color-mix(in oklab, var(--bg) 82%, transparent); border: 1px solid var(--line-strong); color: var(--fg-soft); transition: all .2s; }
+.sx-gtabs button.on { background: var(--ice); color: var(--on-accent); border-color: var(--ice); font-weight: 600; }
+.sx-shot { aspect-ratio: 16 / 9; }
+
+/* ── Motion extras ────────────────────────────────────────────────────────────── */
+.sx-progress { position: fixed; inset: 0 0 auto 0; height: 2px; z-index: 60; transform-origin: 0 50%; transform: scaleX(var(--p, 0)); background: linear-gradient(90deg, var(--folder-skills), var(--folder-projects), var(--folder-education), var(--folder-about)); }
+.sx-hero h1 span { background: linear-gradient(100deg, var(--fg-muted) 30%, var(--ice) 50%, var(--fg-muted) 70%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }
+@keyframes sx-shine { 0% { background-position: 100% 0; } 60%, 100% { background-position: -100% 0; } }
+@keyframes sx-breathe { 50% { opacity: .55; } }
+.sx-card:hover .sx-shot { border-color: var(--acc-line); }
+@media (prefers-reduced-motion: reduce) { .sx-hero h1 span, .sx-pat-glow { animation: none; } }
+
+/* ── Hero v2: copy on the left, a miniature of the desk screen on the right ───── */
+.sx-hero { --mx: 0; --my: 0; }
+.sx-herogrid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 56px; align-items: center; }
+.sx-stats { margin: 44px 0 0; padding: 22px 0 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(4, auto); justify-content: start; gap: 12px 36px; }
+.sx-stats dt { font-size: 22px; font-weight: 500; color: var(--fg); letter-spacing: -.03em; }
+.sx-stats dd { margin: 2px 0 0; font-size: 12.5px; color: var(--fg-dim); max-width: 12ch; line-height: 1.35; }
+
+.sx-device { position: relative; perspective: 1100px; padding: 30px 30px 40px; }
+.sx-win {
+  position: relative; border-radius: 20px; overflow: hidden; border: 1px solid var(--line-strong); background: var(--panel);
+  transform: rotateY(calc(var(--mx) * -10deg - 6deg)) rotateX(calc(var(--my) * 8deg + 3deg)); transition: transform .25s var(--ease);
+  box-shadow: 0 50px 90px -40px rgb(0 0 0 / .9), 0 0 0 1px var(--line-soft), 0 0 80px -30px var(--acc-line);
+}
+.sx-win .sx-bar { position: static; }
+.sx-win .sx-bar span { margin-left: 8px; font-size: 11.5px; color: var(--fg-dim); }
+.sx-winbody { padding: 34px 26px 30px; text-align: center; background: radial-gradient(420px 260px at 50% 0%, color-mix(in oklab, var(--brand-from) 26%, transparent), transparent 70%), radial-gradient(360px 240px at 90% 100%, color-mix(in oklab, var(--brand-to) 20%, transparent), transparent 70%), var(--panel-raised); }
+.sx-winbody b { display: block; font-size: 22px; letter-spacing: -.03em; font-weight: 600; }
+.sx-winbody small { display: block; margin-top: 6px; font-size: 12px; color: var(--fg-muted); }
+.sx-minitiles { margin-top: 26px; display: flex; justify-content: center; gap: 12px; }
+.sx-minitiles span { display: grid; justify-items: center; gap: 7px; font-size: 10.5px; color: var(--fg-soft); text-transform: capitalize; }
+.sx-minitiles i { width: 46px; height: 46px; border-radius: 13px; background: linear-gradient(160deg, color-mix(in oklab, var(--t) 80%, white 6%), var(--t)); box-shadow: 0 10px 22px -10px var(--t); animation: sx-float 5s ease-in-out infinite; animation-delay: calc(var(--k) * -.8s); }
+
+.sx-note { position: absolute; z-index: 2; padding: 10px 14px; border-radius: 14px; border: 1px solid var(--line-strong); background: color-mix(in oklab, var(--panel) 88%, transparent); font-size: 12.5px; color: var(--fg-soft); box-shadow: 0 20px 40px -20px rgb(0 0 0 / .8); transition: translate .3s var(--ease); animation: sx-float 6s ease-in-out infinite; }
+.sx-note .g { color: var(--ok); } .sx-note .d { color: var(--fg-dim); }
+.sx-note b { color: var(--ice); font-size: 17px; margin-right: 4px; }
+.sx-note i { display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px var(--ok); }
+.sx-note.n1 { left: -14px; bottom: -6px; translate: calc(var(--mx) * -18px) calc(var(--my) * -12px); animation-delay: -1s; }
+.sx-note.n2 { right: -4px; top: 12px; translate: calc(var(--mx) * 22px) calc(var(--my) * 14px); animation-delay: -3s; }
+.sx-note.n3 { right: 18px; bottom: 0; translate: calc(var(--mx) * 14px) calc(var(--my) * 20px); animation-delay: -2s; }
+
+@media (max-width: 1000px) {
+  .sx-herogrid { grid-template-columns: 1fr; gap: 40px; }
+  .sx-hero { padding-bottom: 110px; }
+  .sx-stats { grid-template-columns: repeat(2, auto); }
+}
+@media (max-width: 560px) { .sx-note.n1, .sx-note.n2 { display: none; } .sx-device { padding: 10px 6px 34px; } .sx-minitiles { gap: 8px; } .sx-minitiles i { width: 38px; height: 38px; } }
+@media (prefers-reduced-motion: reduce) { .sx-win { transform: none; } .sx-note, .sx-minitiles i { animation: none; } }
+
+/* the robot replaces the arrow while it is running */
+.sx.has-buddy, .sx.has-buddy * { cursor: none !important; }
+/* docked on a touch screen: tappable, so it can take you back to the top */
+.sx-buddy.dock { pointer-events: auto; cursor: pointer; }
+
+/* page scroll never gets trapped by an embedded page: it only takes the mouse after a click */
+.sx-cover { position: absolute; inset: 0; z-index: 2; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 54px; background: transparent; border: 0; cursor: pointer; }
+.sx-cover span { opacity: 0; transform: translateY(6px); padding: 6px 14px; border-radius: 999px; font-size: 12.5px; color: var(--fg); background: color-mix(in oklab, var(--bg) 80%, transparent); border: 1px solid var(--line-strong); transition: opacity .25s, transform .25s var(--ease); }
+.sx-cover:hover span { opacity: 1; transform: none; }
+.sx-card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: #000; opacity: var(--dim, 0); pointer-events: none; z-index: 5; }
+
+/* where the robot sits in the hero: on top of the window, slightly left of centre */
+.sx-bot-anchor { position: absolute; left: calc(50% - 59px); top: -96px; width: 118px; height: 140px; pointer-events: none; z-index: 3; }
+/* a soft shadow on the window, so the robot reads as standing on it */
+.sx-bot-anchor::after { content: ""; position: absolute; left: 14%; right: 14%; bottom: -10px; height: 16px; border-radius: 50%; background: radial-gradient(closest-side, rgb(0 0 0 / .55), transparent); filter: blur(3px); }
+@media (max-width: 1000px) { .sx-bot-anchor { left: calc(50% - 48px); top: -80px; width: 96px; height: 114px; } .sx-bubble { display: none; } }
+
+/* ── About: a lead and a plain list ───────────────────────────────────────────── */
+.sx-alist { margin: 34px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.sx-alist li { padding: 15px 0; border-bottom: 1px solid var(--line); font-size: 16px; line-height: 1.5; color: var(--fg-body); text-wrap: pretty; }
+.sx-about p.sx-aopen { margin: 20px 0 0; font-size: 15px; color: var(--fg-dim); max-width: none; text-wrap: pretty; }
+
+
+/* speech bubble beside the robot while it is on its perch; it goes away once the robot becomes the cursor */
+.sx-bubble { position: absolute; right: calc(100% + 18px); top: 0; width: 210px; padding: 12px 15px; border-radius: 16px 16px 4px 16px; font-size: 13px; line-height: 1.45; color: var(--fg-body);
+  border: 1px solid var(--acc-line); background: color-mix(in oklab, var(--panel-raised) 96%, transparent); box-shadow: 0 22px 44px -22px rgb(0 0 0 / .85), 0 0 40px -18px var(--acc);
+  opacity: 0; transform: translateY(8px) scale(.92); transform-origin: 100% 100%; animation: sx-pop .6s var(--ease) 1.6s forwards; transition: opacity .3s, transform .3s; }
+.sx-bubble b { display: block; margin-bottom: 2px; color: var(--fg); font-weight: 600; font-size: 14px; }
+.sx-bubble::before { content: ""; position: absolute; right: -7px; bottom: 12px; width: 12px; height: 12px; border-right: 1px solid var(--acc-line); border-top: 1px solid var(--acc-line); background: color-mix(in oklab, var(--panel-raised) 96%, transparent); transform: rotate(45deg); }
+@keyframes sx-pop { to { opacity: 1; transform: none; } }
+.sx.has-buddy .sx-bubble { animation: none; opacity: 0; transform: translateY(8px) scale(.92); }
+@media (pointer: coarse), (prefers-reduced-motion: reduce) { .sx-bubble { display: none; } }
+
+/* ── Responsive extras ────────────────────────────────────────────────────────── */
+/* the Contact button replaces the Contact link; between 993px and 1200px the links tighten to fit */
+.sx-links > a[href="#contact"]:not(.sx-btn) { display: none; }
+@media (max-width: 1200px) { .sx-links { gap: 16px; font-size: 14px; } }
+@media (max-width: 992px) { .sx-links { gap: 8px; } .sx-links > a:not(.sx-btn) { display: none; } }
+.sx-links, .sx-links a { white-space: nowrap; }
+@media (max-width: 560px) {
+  .sx-big-links a { flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 20px 4px; }
+  .sx-big-links a span { text-align: center; font-size: 13px; }
+  .sx-hero { padding-top: 96px; }
+  .sx-btn { height: 42px; padding: 0 18px; }
+  .sx-cta .sx-btn { flex: 1 1 auto; justify-content: center; }
+  .sx-url { max-width: 80%; }
+  .sx-foot .sx-wrap { flex-direction: column; }
+}
+
+/* the small "Early" pill beside the title of an early project */
+.sx-epill { display: inline-block; margin-left: 12px; padding: 2px 10px; border-radius: 999px; vertical-align: middle; font-size: 11.5px; font-weight: 500; letter-spacing: 0; color: var(--fg-soft); border: 1px solid var(--acc-line); background: var(--acc-soft); transform: translateY(-2px); }
+
+/* ── Phones: centred headings, hero and project index ─────────────────────────── */
+.sx-split > *, .sx-egrid > *, .sx-herogrid > * { min-width: 0; }
+@media (max-width: 700px) {
+  .sx-herogrid { grid-template-columns: minmax(0, 1fr); text-align: center; }
+  .sx-pill { margin-inline: auto; }
+  .sx-hero h1, .sx-lede { margin-inline: auto; }
+  .sx-cta { justify-content: center; }
+  .sx-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); justify-content: stretch; text-align: center; gap: 22px 12px; }
+  .sx-stats dd { margin-inline: auto; }
+  
+  .sx-side { text-align: center; }
+  .sx-label { justify-content: center; }
+  .sx-label::after { content: ""; width: 22px; height: 1px; background: var(--acc); }
+  .sx-side h2 { margin-inline: auto; }
+  .sx-side p { margin-inline: auto; max-width: 32ch; }
+  .sx-index { margin-top: 24px; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 8px; border-left: 0; }
+  .sx-index a { margin: 0; padding: 7px 14px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: 12.5px; }
+  .sx-index a.on { border-color: var(--acc); background: var(--acc-soft); }
+  .sx-foot .sx-wrap { align-items: center; text-align: center; }
+}
+
+/* ── Experience on small screens: still pinned, one role at a time, with the roles as pills ─ */
+@media (max-width: 900px) {
+  .sx-exp { height: calc(var(--n) * 70vh + 100vh); }
+  .sx-pin { align-items: flex-start; padding-top: 84px; }
+  .sx-egrid { align-items: start; gap: 14px; text-align: center; }
+  .sx-egrid .sx-label { justify-content: center; }
+  .sx-egrid .sx-label::after { content: ""; width: 22px; height: 1px; background: var(--acc); }
+  /* on a phone the big year becomes a small status pill */
+  .sx-ebig { margin: 12px auto 0; height: 32px; font-size: 13px; }
+  .sx-ebig span { left: 0; right: 0; text-align: center; }
+  .sx-ebig b { display: none; }
+  .sx-ebig em { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-style: normal; font-family: var(--font-mono), monospace; font-size: 12.5px; color: var(--fg-soft); border: 1px solid var(--acc-line); background: var(--acc-soft); }
+  .sx-ebig em::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 10px var(--acc); }
+  .sx-rail { margin-top: 14px; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .sx-rail button { padding: 7px 14px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: 13px; }
+  .sx-rail button i { display: none; }
+  .sx-rail button.on { border-color: var(--acc); background: var(--acc-soft); }
+  .sx-panes { min-height: 380px; border-left: 0; border-top: 1px solid var(--line); padding: 20px 0 0; text-align: left; }
+  .sx-pane { inset: 20px 0 0 0; }
+  .sx-role { font-size: 22px; }
+  .sx-pane p { font-size: 15px; }
+  .sx-pane ul { margin-top: 16px; gap: 10px; }
+  .sx-pane li { font-size: 15px; }
+  .sx-pane li::before { margin-top: 9px; }
+}
+@media (max-width: 380px) { .sx-pane li { font-size: 14px; } }
+
+/* desktop keeps the big year; the status wording is for phones only */
+.sx-ebig em { display: none; }
+@media (max-width: 900px) { .sx-ebig em { display: inline-flex; } }
+
+/* ── Phones: the content under a centred heading is centred too ───────────────── */
+@media (max-width: 700px) {
+  /* project cards */
+  .sx-pbody { align-items: center; text-align: center; }
+  .sx-d { margin-inline: auto; }
+  .sx-tags, .sx-btns { justify-content: center; }
+  /* experience: the bullets become centred lines with hairlines between them */
+  .sx-panes { text-align: center; }
+  .sx-pane p { margin-inline: auto; }
+  .sx-pane ul { align-items: stretch; gap: 0; margin-inline: auto; }
+  .sx-pane li { flex-direction: column; align-items: center; gap: 0; padding: 11px 0; border-top: 1px solid var(--line); text-align: center; }
+  .sx-pane li:first-child { border-top: 0; }
+  .sx-pane li::before { display: none; }
+  /* skills, education, about */
+  .sx-col { text-align: center; }
+  .sx-chips, .sx-links-row { justify-content: center; }
+  .sx-about p, .sx-about .sx-aopen { text-align: center; margin-inline: auto; }
+  .sx-alist li { text-align: center; }
+}
+
+/* ── Experience on phones: the roles share one grid cell, so the pinned screen is exactly as tall as the longest role,
+      and the whole block sits in the middle of the screen instead of leaving a gap below ── */
+@media (max-width: 900px) {
+  .sx-pin { align-items: center; padding-top: 72px; padding-bottom: 24px; }
+  .sx-panes { display: grid; min-height: 0; }
+  .sx-pane { position: relative; inset: auto; grid-area: 1 / 1; }
+}
+
+/* ── Education: the kind is a real pill; the institution is plain text ────────── */
+
+/* ── Stack: shorter cards that fit the screen, with tighter, fewer peeks ──────── */
+.sx-card { top: calc(104px + min(var(--i), 4) * 16px); margin-bottom: 28px; }
+.sx-card .sx-shot { aspect-ratio: auto; height: clamp(190px, 44vh, 360px); }
+.sx-card .sx-pbody { padding-top: 18px; }
+@media (max-width: 900px) { .sx-card { top: calc(80px + min(var(--i), 4) * 12px); } .sx-card .sx-shot { height: clamp(170px, 34vh, 280px); } }
+
+/* ── Experience on desktop: only as tall as its content, starting higher, with a shorter scroll ── */
+@media (min-width: 901px) {
+  .sx-exp { height: calc(var(--n) * 55vh + 600px); }
+  .sx-pin { height: auto; align-items: flex-start; padding: 108px 0 40px; }
+  .sx-egrid { align-items: start; gap: 60px; }
+  .sx-ebig { margin-top: 26px; }
+  .sx-rail { margin-top: 22px; }
+  .sx-panes { min-height: 0; display: grid; }
+  .sx-pane { position: relative; inset: auto; grid-area: 1 / 1; }
+}
+
+/* ── Education: a selector under the description, one entry on stage at a time ── */
+.sx-etabs button { display: block; width: 100%; text-align: left; font: inherit; cursor: pointer; background: none; border: 0; border-left: 1px solid transparent; margin-left: -1px; padding: 8px 0 8px 18px; font-family: var(--font-mono), monospace; font-size: 13.5px; text-transform: capitalize; color: var(--fg-dim); transition: color .25s, border-color .25s; }
+.sx-etabs button:hover { color: var(--fg-soft); }
+.sx-etabs button.on { color: var(--fg); border-left-color: var(--acc); }
+.sx-edu-stage { min-height: 380px; }
+.sx-edu-card { animation: sx-edu-in .55s var(--ease) both; padding: 4px 0 0; }
+@keyframes sx-edu-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.sx-edu-card h3 { margin: 0; font-size: clamp(24px, 2.6vw, 34px); letter-spacing: -.03em; font-weight: 600; line-height: 1.1; }
+.sx-edu-card .sx-meta { margin-top: 10px; font-family: var(--font-sans), system-ui, sans-serif; font-size: 16px; color: var(--fg-soft); }
+.sx-edu-card > p { margin: 16px 0 0; max-width: 58ch; font-size: 17px; line-height: 1.55; color: var(--fg-muted); }
+.sx-edu-card .sx-tags { margin-top: 20px; }
+.sx-edu-notes { margin: 22px 0 0; padding: 0; list-style: none; max-width: 58ch; border-top: 1px solid var(--line); }
+.sx-edu-notes li { padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 15px; color: var(--fg-body); }
+.sx-edu-card .sx-links-row { margin-top: 22px; }
+@media (max-width: 700px) {
+  .sx-etabs { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 8px; border-left: 0; }
+  .sx-etabs button { display: inline-block; width: auto; margin: 0; padding: 7px 16px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: 12.5px; text-align: center; }
+  .sx-etabs button.on { border-color: var(--acc); background: var(--acc-soft); }
+  .sx-edu-stage { min-height: 0; text-align: center; }
+  .sx-edu-card > p, .sx-edu-notes { margin-inline: auto; }
+  .sx-edu-notes li { text-align: center; }
+}
+
+/* ── Spacing pass: hero no longer fills a whole screen; Experience pins below the nav and fills it ─ */
+.sx-hero { min-height: 0; padding: 132px 0 96px; }
+@media (max-width: 1000px) { .sx-hero { padding-bottom: 72px; } }
+@media (min-width: 901px) {
+  .sx-exp { height: calc(var(--n) * 50vh + 100svh); }
+  .sx-pin { top: 64px; height: auto; min-height: calc(100svh - 64px); align-items: center; padding: 28px 0; }
+  .sx-egrid { align-items: start; }
+}
+@media (max-width: 900px) { .sx-pane li:nth-child(n + 5) { display: none; } }
+
+/* ── Tablet range (below 992px): one column, a few compact pills instead of many ─────────────── */
+@media (max-width: 991px) {
+  .sx-split, .sx-egrid { grid-template-columns: minmax(0, 1fr); gap: 30px; }
+  .sx-side { position: static; }
+  .sx-herogrid { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .sx-stats { grid-template-columns: repeat(4, auto); gap: 14px 32px; }
+  /* the project and education selectors become one row of pills */
+  .sx-index, .sx-etabs { flex-direction: row; flex-wrap: wrap; gap: 8px; border-left: 0; margin-top: 22px; }
+  .sx-index a, .sx-etabs button { display: inline-block; width: auto; margin: 0; padding: 7px 15px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: 12.5px; text-align: center; }
+  .sx-index a.on, .sx-etabs button.on { border-color: var(--acc); background: var(--acc-soft); color: var(--fg); }
+  .sx-edu-stage { min-height: 0; }
+  /* quieter chips and tags */
+  .sx-chips { gap: 6px; margin-top: 12px; }
+  .sx-chip { padding: 4px 10px; font-size: 12px; }
+  .sx-tags { gap: 6px; }
+  .sx-tag { padding: 3px 8px; font-size: 11.5px; }
+  .sx-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 28px; }
+  .sx-card .sx-shot { height: clamp(180px, 36vh, 300px); }
+}
+@media (max-width: 700px) {
+  .sx-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sx-cols { grid-template-columns: minmax(0, 1fr); }
+  .sx-index, .sx-etabs { justify-content: center; }
+}
+
+/* smooth anchor scrolling has to be set on the root element, and sections must stop below the fixed nav */
+html:has(.sx) { scroll-behavior: smooth; scroll-padding-top: 72px; }
+@media (prefers-reduced-motion: reduce) { html:has(.sx) { scroll-behavior: auto; } }
+
+/* placeholder while a preview loads by itself */
+.sx-skel { position: absolute; inset: 0; display: grid; place-items: center; background: linear-gradient(110deg, transparent 30%, var(--acc-soft) 50%, transparent 70%) 0 0 / 250% 100%, var(--bg); animation: sx-skel 1.6s linear infinite; }
+.sx-skel span { font-size: 12.5px; color: var(--fg-dim); }
+@keyframes sx-skel { to { background-position: -150% 0; } }
+@media (prefers-reduced-motion: reduce) { .sx-skel { animation: none; } }
+
+/* an embedded site is hidden (not unloaded) while the page scrolls; the still image underneath takes its place */
+.sx.scrolling .sx-stage iframe { display: none; }
+.sx-stage .sx-poster { object-fit: cover; object-position: top; opacity: 1; }
+
+/* Tablet and below: one shared column. Cards and the hero window fill it, so both edges line up with the text. */
+@media (max-width: 991px) {
+  .sx-card { max-width: none; width: 100%; }
+  .sx-device { width: 100%; max-width: none; padding-inline: 0; }
+  .sx-pbody { align-items: flex-start; }
+}
+@media (max-width: 700px) { .sx-pbody { align-items: center; } }
+
+/* no robot at 992px and below: its perch and speech bubble go with it */
+@media (max-width: 992px) { .sx-bot-anchor, .sx-bubble, .sx-buddy { display: none; } }
+
+/* ── Education: pinned like experience; scrolling swaps the entry on stage ── */
+.sx-edusc { padding: 0; height: calc(var(--n) * 60vh + 100svh); }
+.sx-edusc .sx-pin { padding-top: 64px; }
+.sx-edu-card:not(.on) { display: none; }
+
+/* the hero centres its content with flexbox, which shrank the column to its content; it must span the full container like every other section */
+.sx-hero > .sx-wrap { width: 100%; }
+
+/* One shared side margin for every section (hero, projects, experience…), generous on tablets, tighter on phones */
+@media (max-width: 991px) { .sx-wrap { padding-inline: clamp(24px, 9vw, 96px); } }
+@media (max-width: 560px) { .sx-wrap { padding-inline: 22px; } }
+
+/* award: a medal and a newspaper clipping with the name highlighted */
+.sx-clip { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px 14px; border-radius: 6px; background: #efe9dc; color: #2a2620; font-family: Georgia, "Times New Roman", serif; box-shadow: 0 16px 32px -14px rgba(0, 0, 0, .7); transform: rotate(-.6deg); }
+.sx-clip-top { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 2px solid #2a2620; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+.sx-clip-paper { font-weight: 700; font-style: italic; text-transform: none; font-size: 17px; letter-spacing: 0; }
+.sx-clip-title { font-size: 18px; font-weight: 700; line-height: 1.25; }
+.sx-clip-lines { display: grid; gap: 6px; }
+.sx-clip-lines i { display: block; height: 6px; border-radius: 3px; background: #2a262022; }
+.sx-clip-lines i:last-child { width: 72%; }
+.sx-clip-hit { font-size: 17px; line-height: 1.5; }
+.sx-award mark { color: #1d1a15; background: linear-gradient(transparent 12%, #ffd84d 12%, #ffd84d 92%, transparent 92%); padding: 0 4px; font-weight: 700; }
+.sx-award-src { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; font: 600 13px var(--font-bricolage), sans-serif; color: #7a2e1c; }
+
+/* skills: between 768px and 1200px only the first four pills show, the rest sit behind a button */
+.sx-more { display: none; }
+@media (min-width: 768px) and (max-width: 1200px) {
+  .sx-more { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; padding: 8px 18px; border-radius: 999px; border: 1px solid var(--ice); background: color-mix(in oklab, var(--ice) 16%, transparent); color: var(--ice); font: 600 13.5px var(--font-mono), monospace; cursor: pointer; transition: background .2s, box-shadow .2s; }
+  .sx-more:hover { background: color-mix(in oklab, var(--ice) 28%, transparent); box-shadow: 0 0 22px color-mix(in oklab, var(--ice) 35%, transparent); }
+}
+
+
+
+
+
+/* the award tab in Education: the medal sits beside the clipping */
+
+/* 992px and below: entries use the full width, and pinned sections leave room for the bottom bar */
+@media (max-width: 992px) {
+  .sx-edu-card > p, .sx-edu-notes { max-width: none; }
+  .sx-pin { padding-bottom: 100px; }
+}
+
+/* skills "show more": outside 768px–1200px every pill simply shows. Inside it, the extra pills stay in the same rows and
+   grow open one by one (width and fade), so nothing jumps to another place */
+.sx-extra, .sx-extra-in { display: contents; }
+@media (min-width: 768px) and (max-width: 1200px) {
+  .sx-extra .sx-chip { max-width: 260px; white-space: nowrap; transition: max-width .55s var(--ease), padding .55s var(--ease), margin .55s var(--ease), opacity .4s, border-color .2s, background .2s; transition-delay: calc(var(--k) * 50ms); }
+  .sx-chips:not(.open) .sx-extra .sx-chip { max-width: 0; padding-inline: 0; margin-left: -8px; border-width: 0; opacity: 0; overflow: hidden; transition-delay: 0s; }
+}
+
+
+/* the award: the newspaper clipping with the bronze medal pinned on it like a seal (same at every width) */
+.sx-award { position: relative; display: block; margin-top: 26px; padding-bottom: 26px; }
+.sx-award .sx-clip { padding-bottom: 22px; transition: transform .3s var(--ease); }
+.sx-award:hover .sx-clip { transform: rotate(0) translateY(-2px); }
+.sx-medal { position: absolute; right: 20px; bottom: 0; z-index: 2; width: 64px; height: 88px; display: grid; justify-items: center; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, .45)); }
+.sx-medal i { position: absolute; top: 0; width: 26px; height: 34px; background: linear-gradient(#c0392b, #8e2418); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%); }
+.sx-medal b { position: absolute; bottom: 0; display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; font: 800 26px/1 var(--font-bricolage), sans-serif; color: #3a2108; background: radial-gradient(circle at 32% 28%, #f6c79a, #c47c40 60%, #8a5224); box-shadow: inset 0 0 0 4px rgba(255, 220, 180, .35); }
+.sx-award-src { padding-right: 92px; }
+
+/* 768px and below: body text reads left-aligned (headings stay centred), which is easier on a narrow column */
+@media (max-width: 768px) {
+  .sx-pane p, .sx-edu-card > p { text-align: center; text-wrap: balance; margin-inline: auto; }
+  .sx-pane ul { align-items: stretch; }
+  .sx-pane li { flex-direction: row; align-items: flex-start; gap: 12px; padding: 0; border-top: 0; text-align: left; }
+  .sx-pane li::before { margin-top: 9px; }
+  .sx-edu-notes li { text-align: left; }
+  .sx-edu-card .sx-tags { justify-content: center; }
+}
+
+/* experience: on small screens the big era text is replaced by a pill, so the section gets a real heading */
+.sx-ehead { display: none; }
+@media (max-width: 900px) { .sx-ehead { display: block; margin: 10px 0 0; font-size: clamp(28px, 7vw, 40px); line-height: 1.1; letter-spacing: -.03em; font-weight: 600; text-align: center; } }
+
+/* the medal sits at the top right of the clipping */
+.sx-award { margin-top: 44px; padding-bottom: 0; }
+.sx-medal { top: -34px; bottom: auto; right: 18px; }
+.sx-award .sx-clip { padding-bottom: 14px; }
+.sx-award .sx-clip-top { padding-right: 84px; }
+.sx-award-src { padding-right: 0; }
+
+/* education: related links sit in their own strip right under the tags, before the notes */
+.sx-rel { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 22px; padding: 12px 14px; border: 1px solid var(--line-strong); border-radius: 18px; background: var(--veil); }
+.sx-rel-k { margin-right: 4px; font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-dim); }
+@media (max-width: 768px) { .sx-rel { justify-content: center; } .sx-rel-k { flex-basis: 100%; text-align: center; margin: 0 0 2px; } }
+
+/* the main link is a button; the rest are a tidy grid of equal tiles */
+.sx-rel { display: grid; gap: 12px; justify-items: start; }
+.sx-rel-k { margin: 0; }
+.sx-rel-grid { display: grid; width: 100%; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.sx-rel-grid a { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line); background: color-mix(in oklab, var(--bg) 40%, transparent); font-size: 13.5px; color: var(--fg-soft); transition: border-color .2s, color .2s, background .2s; }
+.sx-rel-grid a:hover { border-color: var(--acc-line); color: var(--fg); background: var(--acc-soft); }
+@media (max-width: 768px) { .sx-rel { justify-items: center; } .sx-rel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* small screens: Education stays pinned. Every entry gets 130% of a screen of scrolling; an entry taller than its window
+   slides up inside it first (see the education block in Website.tsx), then the next entry takes over */
+@media (max-width: 992px) {
+  .sx-edusc { height: calc(var(--n) * 130vh + 100svh); }
+  .sx-edusc .sx-pin { position: sticky; top: 0; height: 100svh; align-items: flex-start; padding: 84px 0 0; overflow: clip; }
+  .sx-edusc .sx-edu-stage { overflow: hidden; -webkit-mask-image: linear-gradient(transparent 0, #000 14px, #000 calc(100% - 28px), transparent 100%); mask-image: linear-gradient(transparent 0, #000 14px, #000 calc(100% - 28px), transparent 100%); }
+  .sx-edusc .sx-edu-card.on { translate: 0 var(--eshift, 0px); }
+}
+.sx-rel-grid a.pri { background: var(--ice); border-color: var(--ice); color: var(--on-accent); font-weight: 600; }
+.sx-rel-grid a.pri:hover { background: var(--ice); border-color: var(--ice); color: var(--on-accent); box-shadow: 0 0 22px var(--acc-soft); }
+@media (max-width: 768px) { .sx-edu-card .sx-links-row { justify-content: center; } }
+
+/* education links: no box, just one tidy row of pills under the tags. On narrow screens the row scrolls sideways instead of stacking into a tall block */
+.sx-rel { display: block; margin-top: 20px; padding: 0; border: 0; background: none; border-radius: 0; }
+.sx-rel-grid { display: flex; flex-wrap: wrap; gap: 8px; width: auto; }
+.sx-rel-grid a { display: inline-flex; flex: none; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border-radius: 999px; white-space: nowrap; }
+@media (max-width: 768px) {
+  .sx-rel { margin-inline: -22px; }
+  .sx-rel-grid { flex-wrap: nowrap; overflow-x: auto; padding: 2px 22px 6px; scroll-snap-type: x proximity; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%); }
+  .sx-rel-grid::-webkit-scrollbar { display: none; }
+  .sx-rel-grid a { scroll-snap-align: start; }
+}
+
+/* very narrow screens: the clipping's masthead stacks so the date and the medal never collide */
+@media (max-width: 480px) {
+  .sx-award .sx-clip-top { flex-direction: column; align-items: flex-start; gap: 2px; padding-right: 76px; }
+  .sx-clip-paper { font-size: 16px; }
+  .sx-clip-title { font-size: 16px; }
+  .sx-clip-hit { font-size: 15px; }
+}
+
+/* phones: tidy the experience bullets, give the pinned heading room under the top bar, and make the education header compact
+   so the entry has most of the screen */
+@media (max-width: 768px) {
+  .sx-pane ul { display: flex; flex-direction: column; gap: 12px; }
+  .sx-pane li::before { display: block; flex: none; }
+}
+@media (max-width: 480px) {
+  .sx-exp .sx-pin { padding-top: 92px; }
+  .sx-edusc .sx-pin { padding-top: 76px; }
+  .sx-edusc .sx-side > p, .sx-edusc .sx-side .sx-lead { display: none; }
+  .sx-edusc .sx-side h2 { font-size: 28px; }
+  .sx-etabs { gap: 6px; }
+  .sx-etabs button { padding: 6px 11px; font-size: 12px; }
+}
+
+/* phones: Experience works like Education, a role taller than its window slides up inside it first */
+@media (max-width: 768px) {
+  .sx-exp { height: calc(var(--n) * 130vh + 100svh); }
+  .sx-exp .sx-pin { align-items: flex-start; }
+  .sx-exp .sx-panes { overflow: hidden; min-height: 0; -webkit-mask-image: linear-gradient(transparent 0, #000 12px, #000 calc(100% - 28px), transparent 100%); mask-image: linear-gradient(transparent 0, #000 12px, #000 calc(100% - 28px), transparent 100%); }
+  .sx-exp .sx-pane.on { translate: 0 var(--pshift, 0px); }
+}
+@media (max-width: 480px) { .sx-etabs button { padding: 6px 9px; font-size: 11.5px; } }
+
+/* phones: Education is a simple stack of cards, one per entry, with no pinning, tabs or sliding window, so nothing can be cut off */
+@media (max-width: 768px) {
+  .sx-edusc { height: auto; }
+  .sx-edusc .sx-pin { position: relative; height: auto; align-items: flex-start; padding: 96px 0 110px; overflow: visible; }
+  .sx-edusc .sx-edu-stage { height: auto; overflow: visible; -webkit-mask-image: none; mask-image: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .sx-edusc .sx-edu-card, .sx-edusc .sx-edu-card:not(.on) { display: block; animation: none; translate: none; padding: 22px 18px; border: 1px solid var(--line-strong); border-radius: 22px; background: var(--veil); }
+}
+
+/* project list, 568px and below: one line that scrolls sideways (the active project is kept in view by the page script) */
+@media (max-width: 568px) {
+  .sx-index:not(.sx-etabs) { position: relative; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; margin-inline: -22px; padding: 2px 22px 6px; scrollbar-width: none; scroll-snap-type: x proximity; scroll-padding-inline: 22px; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%); }
+  .sx-index:not(.sx-etabs)::-webkit-scrollbar { display: none; }
+  .sx-index:not(.sx-etabs) a { flex: none; white-space: nowrap; scroll-snap-align: start; }
+}
+
+/* phones: the education links wrap into a tidy grid (two columns) instead of scrolling sideways, so none of them hide off-screen */
+@media (max-width: 768px) {
+  .sx-rel { margin-inline: 0; }
+  .sx-rel-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; overflow: visible; padding: 0; -webkit-mask-image: none; mask-image: none; scroll-snap-type: none; }
+  .sx-rel-grid a { justify-content: space-between; min-width: 0; padding: 0 12px; font-size: 13px; white-space: normal; }
+  .sx-rel-grid a.pri { grid-column: 1 / -1; justify-content: center; }
+}
+
+/* phones: inside the cards the whole entry reads left-aligned (title, details, tags, links); only the section titles stay centred */
+@media (max-width: 768px) {
+  .sx-edusc .sx-edu-card, .sx-edu-card h3, .sx-edu-card .sx-meta, .sx-edu-card > p { text-align: left; }
+  .sx-edu-card > p { margin-inline: 0; text-wrap: pretty; }
+  .sx-edu-card .sx-tags, .sx-edu-card .sx-links-row { justify-content: flex-start; }
+  .sx-pane, .sx-pane .sx-role, .sx-pane h3, .sx-pane p { text-align: left; }
+  .sx-pane p { margin-inline: 0; text-wrap: pretty; }
+  .sx-pane .sx-tags, .sx-pane .sx-links-row { justify-content: flex-start; }
+}
+
+/* the "2.5+ years experience" pill stays on one line */
+.sx-pill { white-space: nowrap; }
+
+/* phones: project cards read left-aligned too */
+@media (max-width: 768px) {
+  .sx-pbody, .sx-pbody h3, .sx-pbody p, .sx-pbody .sx-meta, .sx-pbody div { text-align: left; }
+  .sx-pbody { align-items: flex-start; }
+  .sx-pbody .sx-tags, .sx-pbody .sx-btns { justify-content: flex-start; }
+}
+
+/* ── Menu (992px and below): a burger button in the header opens a drawer that slides in from the right ── */
+.sx-burger { display: none; place-items: center; width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--veil); color: var(--fg); cursor: pointer; transition: border-color .2s, background .2s; }
+.sx-burger:hover { border-color: var(--acc-line); background: var(--acc-soft); }
+@media (max-width: 992px) { .sx-burger { display: grid; } .sx-nav .sx-links { gap: 8px; } }
+@media (max-width: 576px) { .sx-hide-xs { display: none; } }
+.sx-drawer-bg { position: fixed; inset: 0; z-index: 80; background: rgb(0 0 0 / .55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.sx-drawer { position: fixed; z-index: 81; top: 0; right: 0; bottom: 0; width: min(340px, 86vw); display: flex; flex-direction: column; gap: 22px; padding: 18px 20px calc(24px + env(safe-area-inset-bottom)); background: var(--panel-raised); border-left: 1px solid var(--line-strong); box-shadow: -24px 0 60px -20px rgb(0 0 0 / .7); }
+.sx-drawer-top { display: flex; align-items: center; justify-content: space-between; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-dim); }
+.sx-drawer-top .sx-burger { display: grid; }
+.sx-drawer-nav { display: flex; flex-direction: column; gap: 4px; }
+.sx-drawer-nav a { display: flex; align-items: center; gap: 14px; padding: 14px 14px; border-radius: 16px; font-size: 17px; color: var(--fg-soft); transition: background .2s, color .2s; }
+.sx-drawer-nav a svg { width: 20px; height: 20px; color: var(--fg-dim); transition: color .2s; }
+.sx-drawer-nav a:hover { background: var(--veil); color: var(--fg); }
+.sx-drawer-nav a.act { background: color-mix(in oklab, var(--ice) 14%, transparent); color: var(--fg); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ice) 30%, transparent); }
+.sx-drawer-nav a.act svg { color: var(--ice); }
+.sx-drawer-desk { margin-top: auto; justify-content: center; }
+@media (min-width: 993px) { .sx-drawer, .sx-drawer-bg { display: none; } }
+
+/* hero on phones: the window preview (with the robot) comes straight after the buttons */
+@media (max-width: 768px) {
+  .sx-herogrid { display: flex; flex-direction: column; gap: 0; }
+  .sx-herogrid > div:first-child { display: contents; }
+  .sx-cta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 26px; }
+  .sx-cta .sx-btn { height: 48px; padding: 0 10px; font-size: 14.5px; justify-content: center; white-space: nowrap; }
+  .sx-device { order: 5; margin-top: 56px; }
+}
+@media (max-width: 359px) { .sx-cta { grid-template-columns: 1fr; } }
+@media (min-width: 577px) and (max-width: 768px) { .sx-cta { max-width: 460px; } }
+
+/* the hero stats are for wide screens; below 993px the hero is just the headline, the buttons and the preview */
+@media (max-width: 992px) { .sx-stats { display: none; } }
+/* the education links fill the full width of the card, aligned with the text above them */
+.sx-rel { display: block; width: 100%; justify-items: stretch; }
+@media (max-width: 768px) { .sx-rel { justify-items: stretch; margin-inline: 0; } .sx-rel-grid { width: 100%; } }
+
+/* ── Hero on small screens (992px and below): bigger headline and a glow behind it ── */
+@media (max-width: 992px) {
+  .sx-hero::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 560px; pointer-events: none; background: radial-gradient(60% 70% at 50% 0%, color-mix(in oklab, var(--ice) 20%, transparent), transparent 70%); }
+  .sx-hero h1 { font-size: clamp(38px, 8.6vw, 60px); line-height: 1.04; letter-spacing: -.045em; }
+  .sx-lede { font-size: clamp(16px, 2.4vw, 19px); line-height: 1.6; }
+  .sx-pill { box-shadow: 0 0 24px -6px color-mix(in oklab, var(--ok) 55%, transparent); }
+}
+@media (min-width: 769px) and (max-width: 992px) { .sx-hero h1 { max-width: none; } }
+
+/* long link names are cut with an ellipsis instead of wrapping onto a second line */
+.sx-rel-grid a { min-width: 0; overflow: hidden; white-space: nowrap; }
+.sx-rel-grid a .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.sx-rel-grid a svg { flex: none; }
+
+/* hero at 768px and below: everything is centred on one axis, with the headline and the paragraph sharing one sensible width */
+@media (max-width: 768px) {
+  .sx-herogrid { text-align: center; align-items: center; }
+  .sx-herogrid > div:first-child { display: flex; flex-direction: column; align-items: center; min-width: 0; width: 100%; }
+  .sx-hero h1 { max-width: 15ch; margin-inline: auto; text-wrap: balance; }
+  .sx-lede { max-width: 54ch; margin-inline: auto; text-wrap: pretty; }
+  .sx-cta { justify-content: center; }
+  .sx-device { align-self: stretch; }
+}
+@media (max-width: 768px) { .sx-herogrid > div:first-child { display: contents; } .sx-hero h1, .sx-lede, .sx-pill { align-self: center; } }
+
+/* back to top */
+.sx-top { position: fixed; z-index: 60; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line-strong); background: color-mix(in oklab, var(--panel-raised) 82%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); color: var(--ice); cursor: pointer; box-shadow: 0 12px 28px -10px rgb(0 0 0 / .7); opacity: 0; transform: translateY(14px) scale(.9); pointer-events: none; transition: opacity .3s, transform .35s var(--ease), border-color .2s, box-shadow .2s; }
+.sx-top.show { opacity: 1; transform: none; pointer-events: auto; }
+.sx-top:hover { border-color: var(--ice); box-shadow: 0 0 24px -4px var(--ice); }
+@media (prefers-reduced-motion: reduce) { .sx-top { transition: opacity .2s; } }
+
+/* hero from 769px to 992px: left-aligned like every other section on those widths */
+@media (min-width: 769px) and (max-width: 992px) {
+  .sx-herogrid { text-align: left; align-items: stretch; }
+  .sx-herogrid > div:first-child { display: block; }
+  .sx-hero h1 { max-width: 16ch; margin-inline: 0; }
+  .sx-lede { max-width: 56ch; margin-inline: 0; }
+  .sx-cta { justify-content: flex-start; }
+}
+
+/* small screens: the hero starts right under the top bar (no empty band above the pill) */
+@media (max-width: 992px) { .sx-hero { min-height: 0; align-items: flex-start; padding: 104px 0 72px; } }
+@media (max-width: 480px) { .sx-hero { padding-top: 96px; } }
+
+/* pinned sections: when the content is shorter than the screen it sits in the middle instead of leaving an empty block below */
+@media (max-width: 992px) { .sx-exp .sx-pin, .sx-edusc .sx-pin { align-items: safe center; } }
+@media (max-width: 768px) { .sx-edusc .sx-pin { align-items: flex-start; } }
+
+/* hero buttons below 577px: one button per row */
+@media (max-width: 576px) { .sx-cta { grid-template-columns: 1fr; max-width: none; } }
+
+/* contact links on small screens: the name on the left, the address on the right (cut with an ellipsis when it is long) */
+@media (max-width: 992px) {
+  .sx-big-links a { flex-direction: row; align-items: center; justify-content: space-between; gap: 14px; text-align: left; padding: 20px 4px; }
+  .sx-big-links a span { flex: 0 1 auto; min-width: 0; max-width: 62%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; font-size: 13px; }
+}
+
+/* experience: the "current / previous role" pill sits right beside the position title (below 901px; wide screens keep the big era text) */
+.sx-rolepill { display: none; }
+@media (max-width: 900px) {
+  .sx-ebig { display: none; }
+  .sx-rolepill { display: inline-flex; align-items: center; gap: 7px; margin-left: 10px; padding: 4px 11px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--veil); vertical-align: middle; font-size: 11.5px; font-weight: 500; letter-spacing: 0; color: var(--fg-soft); white-space: nowrap; }
+  .sx-rolepill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 8px var(--acc); }
+  .sx-role { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 0; }
+}
+
+/* phones: the education cards are a sideways carousel (swipe, or use the tabs); the next card peeks in from the right */
+@media (max-width: 768px) {
+  .sx-edusc .sx-edu-stage { position: relative; display: flex; gap: 14px; margin-inline: -22px; padding: 4px 22px 10px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 22px; scrollbar-width: none; align-items: stretch; }
+  .sx-edusc .sx-edu-stage::-webkit-scrollbar { display: none; }
+  .sx-edusc .sx-edu-card, .sx-edusc .sx-edu-card:not(.on) { flex: 0 0 86%; min-width: 0; scroll-snap-align: start; }
+  .sx-rolepill { margin-left: 0; }
+  .sx-role { gap: 8px 10px; }
+}
+
+/* small screens: no empty band under the hero buttons or under the pinned Experience content */
+@media (max-width: 992px) {
+  .sx-device { margin-top: 24px; padding-top: 0; }
+  .sx-hero { padding-bottom: 48px; }
+  .sx-exp .sx-pin { height: auto; min-height: 0; align-items: flex-start; padding: 88px 0 28px; }
+}
+@media (max-width: 768px) { .sx-device { margin-top: 28px; } }
+
+/* phones: each education card keeps its own height; the carousel takes the height of the card in front (see fitStage in Website.tsx) */
+@media (max-width: 768px) { .sx-edusc .sx-edu-stage { align-items: flex-start; overflow-y: hidden; transition: height .35s var(--ease); } }
+
+/* phones: the education carousel. Cards share one height and scroll inside; the current card sits in the middle with a peek
+   of the previous one on the left and the next one on the right; the cards slide on by themselves (see Website.tsx) */
+.sx-edots { display: none; }
+@media (max-width: 768px) {
+  .sx-edusc .sx-edu-stage { height: clamp(580px, calc(100svh - 170px), 780px); padding: 4px 8% 6px; margin-inline: -22px; scroll-snap-type: x mandatory; scroll-padding-inline: 8%; align-items: stretch; overflow-y: hidden; transition: none; gap: 12px; }
+  .sx-edusc .sx-edu-card, .sx-edusc .sx-edu-card:not(.on) { flex: 0 0 84%; height: 100%; overflow-y: auto; overscroll-behavior: contain; scroll-snap-align: center; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; opacity: .5; transform: scale(.95); transition: opacity .25s, transform .3s var(--ease); }
+  .sx-edusc .sx-edu-card.on { opacity: 1; transform: none; }
+  .sx-edots { display: flex; justify-content: center; gap: 8px; margin-top: 6px; }
+  .sx-edots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; background: var(--line-strong); transition: width .35s var(--ease), background .3s; }
+  .sx-edots button.on { width: 26px; background: var(--ice); }
+}
+
+/* ── Slides: the skill groups. A normal grid on wide screens; on phones (768px and below) a carousel with the current card in the
+   middle and a peek of its neighbours, dots underneath, and an automatic slide (see Slides.tsx) ── */
+.sx-slide { display: contents; }
+.sx-sdots { display: none; }
+@media (max-width: 768px) {
+  .sx-slides { display: flex; gap: 12px; margin-inline: -22px; padding: 4px 8% 6px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 8%; scrollbar-width: none; align-items: stretch; grid-template-columns: none; }
+  .sx-slides::-webkit-scrollbar { display: none; }
+  .sx-slide { display: block; flex: 0 0 84%; min-width: 0; padding: 22px 18px; scroll-snap-align: center; border: 1px solid var(--line-strong); border-radius: 22px; background: var(--veil); opacity: .5; transform: scale(.95); transition: opacity .25s, transform .3s var(--ease); }
+  .sx-slide.on { opacity: 1; transform: none; }
+  .sx-slide .sx-col { text-align: left; }
+  .sx-slide .sx-chips { justify-content: flex-start; }
+  .sx-sdots { display: flex; justify-content: center; gap: 8px; margin-top: 6px; }
+  .sx-sdots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; background: var(--line-strong); transition: width .35s var(--ease), background .3s; }
+  .sx-sdots button.on { width: 26px; background: var(--ice); }
+}
+
+/* Skills carousel look (different from Education's boxed, centred cards): wide tinted cards with a coloured edge and a big
+   number, the next card peeking in from the right, and story-style progress bars that fill while waiting for the next slide */
+@media (max-width: 768px) {
+  .sx-slides { counter-reset: slide; padding: 4px 22px 8px; margin-inline: -22px; scroll-padding-inline: 22px; gap: 10px; }
+  .sx-slide { counter-increment: slide; position: relative; flex: 0 0 88%; scroll-snap-align: start; overflow: hidden; padding: 24px 20px 22px 24px; border: 0; border-radius: 20px; background: linear-gradient(160deg, color-mix(in oklab, var(--acc) 16%, var(--panel-raised)), var(--panel-raised) 65%); opacity: 1; transform: none; }
+  .sx-slide::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--acc); }
+  .sx-slide::after { content: counter(slide, decimal-leading-zero); position: absolute; top: 8px; right: 14px; font: 700 54px/1 var(--font-bricolage), sans-serif; letter-spacing: -.04em; color: color-mix(in oklab, var(--acc) 22%, transparent); pointer-events: none; }
+  .sx-slide.on { opacity: 1; transform: none; }
+  .sx-slide .sx-col h3 { padding-bottom: 12px; border-bottom: 0; font-size: 22px; color: var(--fg); }
+  .sx-slide .sx-chip { border-color: color-mix(in oklab, var(--acc) 40%, var(--line-strong)); background: color-mix(in oklab, var(--acc) 10%, transparent); }
+  .sx-sdots { gap: 6px; margin: 14px 4px 0; justify-content: stretch; }
+  .sx-sdots button { position: relative; flex: 1; height: 4px; width: auto; padding: 0; overflow: hidden; border-radius: 4px; background: var(--line-strong); }
+  .sx-sdots button.on { width: auto; background: var(--line-strong); }
+  .sx-sdots button i { position: absolute; inset: 0; background: var(--acc); transform: scaleX(0); transform-origin: left; }
+  .sx-sdots button.done i { transform: none; }
+  .sx-sdots button.on i { animation: sx-fill 3.2s linear forwards; }
+}
+@keyframes sx-fill { to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .sx-sdots button.on i { animation: none; transform: none; } }
+
+/* skills progress: four small centred bars, close under the cards */
+@media (max-width: 768px) {
+  .sx-sdots { justify-content: center; gap: 6px; margin: -14px 0 0; }
+  .sx-sdots button { flex: none; width: 34px; height: 3px; }
+}
+@media (max-width: 768px) { .sx-sdots button.on { width: 34px; } }
+
+/* pinned Experience on small screens: the pin fills the screen and the content sits in the middle of it (no empty black block below) */
+@media (max-width: 992px) { .sx-exp .sx-pin { height: 100svh; min-height: 0; align-items: safe center; padding: 72px 0 24px; } }
+
+/* skills carousel, simple and neutral: no accent colour on the cards, bars or pills (the section colour stays only in its small label) */
+@media (max-width: 768px) {
+  .sx-slide { background: var(--veil); box-shadow: inset 0 0 0 1px var(--line); }
+  .sx-slide::before { display: none; }
+  .sx-slide::after { color: color-mix(in oklab, var(--fg) 9%, transparent); }
+  .sx-slide .sx-chip { border-color: var(--line-strong); background: transparent; }
+  .sx-sdots button i { background: var(--fg-soft); }
+}
+
+/* skills carousel: a small outlined icon (a touch of yellow) in the corner instead of a number */
+.sx-sicon { display: none; }
+@media (max-width: 768px) {
+  .sx-slide::after { display: none; }
+  .sx-sicon { display: grid; place-items: center; position: absolute; top: 18px; right: 18px; width: 40px; height: 40px; border-radius: 12px; border: 1px solid color-mix(in oklab, var(--acc) 40%, var(--line-strong)); background: color-mix(in oklab, var(--acc) 10%, transparent); color: var(--acc); }
+}
+
+/* education carousel polish: the front card is clearly the main one, neighbours stay readable, and the card has a clear top
+   (a soft light along its edge) and a tidier inside */
+@media (max-width: 768px) {
+  .sx-edusc .sx-edu-card, .sx-edusc .sx-edu-card:not(.on) { opacity: .62; transform: scale(.96); padding: 24px 20px; border-radius: 24px; background: linear-gradient(180deg, color-mix(in oklab, var(--fg) 6%, transparent), transparent 40%), var(--veil); box-shadow: inset 0 1px 0 color-mix(in oklab, var(--fg) 14%, transparent); }
+  .sx-edusc .sx-edu-card.on { opacity: 1; transform: none; border-color: var(--line-strong); box-shadow: inset 0 1px 0 color-mix(in oklab, var(--fg) 22%, transparent), 0 18px 40px -22px rgb(0 0 0 / .8); }
+  .sx-edusc .sx-edu-card h3 { font-size: 24px; line-height: 1.12; }
+  .sx-edusc .sx-edu-card .sx-meta { margin-top: 8px; font-size: 14.5px; color: var(--fg-muted); }
+  .sx-edusc .sx-edu-card > p { margin-top: 14px; font-size: 15.5px; line-height: 1.55; }
+  .sx-edusc .sx-edu-notes { margin-top: 18px; }
+  .sx-edusc .sx-edu-notes li { padding: 10px 0; font-size: 14.5px; }
+  .sx-edots { margin-top: 12px; }
+}
+
+/* education tabs on small screens: one highlight slides from the old tab to the new one */
+.sx-etab-pill { display: none; }
+@media (max-width: 992px) {
+  .sx-etabs { position: relative; }
+  .sx-etab-pill { display: block; position: absolute; left: 0; top: 0; width: var(--tw, 0); height: var(--th, 0); border-radius: 999px; border: 1px solid var(--acc); background: var(--acc-soft); transform: translate(var(--tx, 0), var(--ty, 0)); transition: transform .38s var(--ease), width .38s var(--ease), height .38s var(--ease); pointer-events: none; }
+  .sx-etabs button, .sx-etabs button.on { position: relative; z-index: 1; background: none; border-color: var(--line-strong); transition: color .3s; }
+  .sx-etabs button.on { border-color: transparent; color: var(--fg); }
+}
+@media (prefers-reduced-motion: reduce) { .sx-etab-pill { transition: none; } }

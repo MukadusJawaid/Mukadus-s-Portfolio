@@ -59,5 +59,16 @@ export const education: FolderInput = {
       ],
       links: [],
     },
+    {
+      name: "award-bronze-medal.md",
+      title: "Bronze medal, 3rd position",
+      size: "0.5 KB",
+      kind: "AWARD",
+      meta: "SSUET Convocation · Apr 2024",
+      desc: "Bronze medal for 3rd position in Software Engineering at the Sir Syed University convocation, reported in The Nation.",
+      tags: ["Bronze medal", "3rd position", "Software Engineering"],
+      notes: ["Named among the bronze medallists at the SSUET convocation (1,177 degrees awarded)", "Covered by The Nation on 27 April 2024"],
+      links: [{ t: "Read in The Nation ↗", slug: "nation", url: "https://www.nation.com.pk/27-Apr-2024/ssuet-convocation-held-1177-degrees-awarded", primary: true }],
+    },
   ],
 };

@@ -1,34 +1,25 @@
-import { z } from "zod";
+type FileLink = { t: string; slug: string; url: string; primary: boolean };
 
-export const fileLinkSchema = z.object({
-  t: z.string(),
-  slug: z.string(),
-  url: z.string(),
-  primary: z.boolean(),
-});
-
-export const deskFileSchema = z.object({
-  name: z.string(),
+export type DeskFile = {
+  name: string;
   /** display title for the card; falls back to a tidied-up file name */
-  title: z.string().optional(),
-  size: z.string(),
-  kind: z.string(),
+  title?: string;
+  size: string;
+  kind: string;
   /** short line shown under the title, e.g. "Dec 2025 – Present · Front-End Engineer" */
-  meta: z.string().optional(),
+  meta?: string;
   /** the small summary */
-  desc: z.string(),
-  tags: z.array(z.string()),
+  desc: string;
+  tags: string[];
   /** highlights shown when the card is expanded */
-  notes: z.array(z.string()),
-  links: z.array(fileLinkSchema),
-});
+  notes: string[];
+  links: FileLink[];
+};
 
-export const folderSchema = z.object({
-  id: z.string(),
-  line: z.string(),
+export type FolderInput = {
+  id: string;
+  line: string;
   /** short highlight shown as a pill next to the folder title, e.g. "2.5+ years experience" */
-  badge: z.string().optional(),
-  files: z.array(deskFileSchema),
-});
-
-export type FolderInput = z.input<typeof folderSchema>;
+  badge?: string;
+  files: DeskFile[];
+};
