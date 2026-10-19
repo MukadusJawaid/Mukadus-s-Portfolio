@@ -21,7 +21,7 @@ const intro = (): TermLine[] => [
   { k: "mute", text: "Click a folder on the screen, or type cd <name>." },
 ];
 
-export const initialState: DeskState = { ch: 0, lastCh: 1, file: -1, terminal: true, log: intro() };
+export const initialState: DeskState = { ch: 0, lastCh: 1, file: -1, terminal: true, drawer: false, log: intro() };
 
 /** Append lines to the history, keeping it bounded. */
 const withLog = (s: DeskState, patch: Partial<DeskState>, ...lines: TermLine[]): DeskState => ({
@@ -38,15 +38,16 @@ export function goTo(s: DeskState, ch: number): DeskState {
   if (ch === s.ch) return s;
   const terminal = ch === 0;
   // the history records what the visitor did, not what it showed: just the command
-  if (ch === 0) return withLog(s, { ch: 0, file: -1, terminal }, { k: "cmd", path: pathOf(s.ch), text: "cd .." });
-  return withLog(s, { ch, lastCh: ch, file: -1, terminal }, { k: "cmd", path: pathOf(s.ch), text: "cd " + folders[ch].id });
+  if (ch === 0) return withLog(s, { ch: 0, file: -1, terminal, drawer: false }, { k: "cmd", path: pathOf(s.ch), text: "cd .." });
+  return withLog(s, { ch, lastCh: ch, file: -1, terminal, drawer: true }, { k: "cmd", path: pathOf(s.ch), text: "cd " + folders[ch].id });
 }
 
 /** Open a document (or collapse it when it is already open). Collapsing leaves the history alone. */
 export function toggleFile(s: DeskState, j: number, force = false): DeskState {
   if (s.ch === 0) return s;
   if (s.file === j && !force) return { ...s, file: -1 };
-  return withLog(s, { file: j }, { k: "cmd", path: pathOf(s.ch), text: "cat " + folders[s.ch].files[j].name });
+  // reading a file: the terminal steps aside and the details panel is shown
+  return withLog(s, { file: j, terminal: false, drawer: true }, { k: "cmd", path: pathOf(s.ch), text: "cat " + folders[s.ch].files[j].name });
 }
 
 /** Jump to a document from anywhere, e.g. from a line in the history. */
@@ -74,11 +75,18 @@ export function runCommand(s: DeskState, raw: string): DeskState {
   }
   if (c === "ls") return withLog(s, {}, cmd, ...(s.ch ? listFiles(s.ch) : listFolders()));
 
-  m = c.match(/^(cat|open)\s+(.+)$/);
+  // "cat name", "open name", or just the file name (with or without its extension): open it, even from another folder
+  m = c.match(/^(?:(?:cat|open)\s+)?(.+)$/);
   if (m) {
-    const j = cur.files.findIndex((x) => x.name === m![2] || x.name.replace(/\.\w+$/, "") === m![2]);
-    if (j >= 0) return toggleFile(s, j, true);
-    return withLog(s, {}, cmd, { k: "err", text: `${m[2]}: no such file here — try ls` });
+    const want = m[1].trim();
+    const base = (n: string) => n.replace(/\.\w+$/, "");
+    const here = cur.files.findIndex((x) => x.name === want || base(x.name) === want);
+    if (here >= 0) return toggleFile(s, here, true);
+    for (const d of folders.slice(1)) {
+      const hit = d.files.find((x) => x.name === want || base(x.name) === want);
+      if (hit) return openDoc(s, d.id, hit.name);
+    }
+    if (/^(cat|open)\s/.test(c)) return withLog(s, {}, cmd, { k: "err", text: `${want}: no such file — try ls` });
   }
   if (c === "help") {
     const rows: [string, string][] = [
@@ -93,4 +101,8 @@ export function runCommand(s: DeskState, raw: string): DeskState {
   return withLog(s, {}, cmd, { k: "err", text: `unknown command: ${c} — type help` });
 }
 
-export const toggleTerminal = (s: DeskState): DeskState => ({ ...s, terminal: !s.terminal });
+/** Showing the terminal over an open folder closes the details panel (the folder stays open); hiding it brings the panel back. */
+export const toggleTerminal = (s: DeskState): DeskState => {
+  const terminal = !s.terminal;
+  return { ...s, terminal, drawer: s.ch > 0 ? !terminal : false };
+};

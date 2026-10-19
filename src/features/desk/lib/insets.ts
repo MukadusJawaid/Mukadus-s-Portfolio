@@ -17,7 +17,7 @@ export function useStageInsets() {
   const vw = useViewportWidth();
   const vh = useViewportHeight();
   const terminal = useDeskStore((s) => s.terminal);
-  const open = useDeskStore((s) => s.ch > 0);
+  const open = useDeskStore((s) => s.ch > 0 && s.drawer);
   const custom = useLayoutStore((s) => s.terminalW);
   const expanded = useLayoutStore((s) => s.sheetExpanded);
   const sheetH = sheetHeight(vh, expanded);

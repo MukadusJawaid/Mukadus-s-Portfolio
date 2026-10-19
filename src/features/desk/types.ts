@@ -21,6 +21,8 @@ export type DeskState = {
   file: number;
   /** the terminal panel is showing (it slides away while a folder is open, and can be brought back) */
   terminal: boolean;
+  /** the details panel on the right is showing (it steps aside while the terminal is brought back over an open folder) */
+  drawer: boolean;
   /** everything the visitor has done, kept like a real shell history */
   log: TermLine[];
 };

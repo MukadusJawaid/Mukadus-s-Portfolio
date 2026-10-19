@@ -78,3 +78,4 @@ export function nameplateTexture(name: string, role: string) {
   g.fillText(role.toUpperCase().split("").join(" "), 512, 190);
   return finish(c);
 }
+

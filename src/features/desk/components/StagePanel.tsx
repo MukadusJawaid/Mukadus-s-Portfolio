@@ -2,15 +2,13 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { TransitionLink } from "@/features/transition/TransitionLink";
 import { ArrowLeft, Globe, Minus, Plus, ScanSearch, SquareTerminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { folders } from "../data/folders";
+import { RobotBody } from "@/features/robot/Robot";
 import { DeskBuddy } from "./DeskBuddy";
-import { deskSession } from "../lib/session";
-import { useStartOnInteraction } from "../lib/useStartOnInteraction";
 import { useStageInsets } from "../lib/insets";
 import { folderTone } from "../lib/tone";
 import { useDeskStore } from "../store/useDeskStore";
@@ -33,11 +31,6 @@ export function StagePanel({ className = "" }: { className?: string }) {
   const { wide, left, right, bottom } = useStageInsets();
   const openTermSheet = useLayoutStore((s) => s.openTermSheet);
   const [ready, setReady] = useState(false);
-  // The 3D scene is a large bundle plus a lot of setup work. It starts when the visitor first moves, touches or types
-  // (so the page itself loads fast), and a still image of the desk fills the stage until it is ready.
-  const mount3d = useStartOnInteraction();
-  // coming back from the website the scene is already prefetched, and a stretched still image would look blurry on a big screen
-  const [returning] = useState(deskSession.returning);
   const [failed, setFailed] = useState(false);
 
   const cur = folders[ch];
@@ -46,32 +39,22 @@ export function StagePanel({ className = "" }: { className?: string }) {
 
   return (
     <section aria-label="Desk" className={`relative min-h-0 min-w-0 overflow-hidden rounded-[22px] bg-stage ${className}`}>
-      {/* the still image of the desk: shows instantly, then fades out as the live scene fades in */}
-      {!failed && !returning && (
-        // Placed with CSS only (not the JavaScript layout numbers), so it is in the right place in the very first paint on
-        // every screen size and the largest paint does not wait for the page's scripts to run. On wide screens it sits
-        // beside the terminal, about where the live scene will put the laptop.
-        <div
-          className="absolute inset-y-0 left-0 right-0 transition-opacity duration-700 min-[992px]:left-[clamp(372px,calc(27vw+12px),532px)]"
-          style={{ opacity: ready ? 0 : 1 }}
-          aria-hidden
-        >
-          <Image src="/desk-poster-4.jpg" alt="" fill unoptimized preload fetchPriority="high" className="object-cover" />
-        </div>
-      )}
-
-      {!failed && mount3d && (
+      {/* nothing of the desk is drawn until the live scene is ready: a plain stage with a small loader, then the scene fades in */}
+      {!failed && (
         <div className="absolute inset-0 transition-opacity duration-700" style={{ opacity: ready ? 1 : 0 }}>
           <DeskScene onReady={() => setReady(true)} onFail={() => setFailed(true)} />
         </div>
       )}
 
-      {mount3d && !ready && !failed && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-20 z-[5] flex justify-center" style={{ left, right }} role="status">
-          <span className="inline-flex items-center gap-2.5 rounded-full border border-white/15 bg-black/45 px-4 py-2 font-mono text-xs text-white/85">
-            <span className="size-3.5 animate-spin rounded-full border-2 border-white/25 border-t-link" aria-hidden />
-            setting up the 3D desk…
-          </span>
+      {!ready && !failed && (
+        // while the scene loads: Pixel bobs above the name, with a thin progress line that keeps moving
+        <div className="pointer-events-none absolute inset-x-0 top-1/2 z-[5] flex -translate-y-1/2 flex-col items-center gap-3" style={{ left, right }} role="status">
+          <div className="desk-loader-bot">
+            <RobotBody />
+          </div>
+          <p className="font-sans text-xl font-semibold tracking-tight text-white sm:text-2xl">Mukadus Jawaid</p>
+          <p className="font-mono text-xs text-white/60">setting up the 3D desk…</p>
+          <span className="desk-loader-bar" aria-hidden />
         </div>
       )}
 

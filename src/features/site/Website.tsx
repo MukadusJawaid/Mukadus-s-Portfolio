@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
 import { Slides } from "./Slides";
+import { CertSlider } from "./CertSlider";
 import { MenuDrawer } from "./MenuDrawer";
 import { ScrollTop } from "./ScrollTop";
 import { useMenuStore } from "./useMenuStore";
@@ -221,7 +222,6 @@ export function Website() {
     const cards = $$<HTMLElement>(".sx-card");
     const edu = $<HTMLElement>("#education")!;
     const eduPin = $<HTMLElement>(".sx-pin2")!;
-    const eduStage = $<HTMLElement>(".sx-edu-stage");
     const index = $$<HTMLElement>(".sx-index a");
     const exp = $<HTMLElement>("#experience")!;
     const pin = $<HTMLElement>(".sx-pin")!;
@@ -235,6 +235,8 @@ export function Website() {
     let act = -1;
     let lastPa = -1;
     let eduAct = 0;
+    const small = matchMedia("(max-width: 992px)");
+    const eduCards = $$<HTMLElement>(".sx-edu-card");
 
     const setAct = (i: number) => {
       if (i === act) return;
@@ -253,72 +255,16 @@ export function Website() {
       const span = exp.offsetHeight - pin.offsetHeight;
       scrollTo({ top: top + span * ((i + 0.5) / experience.files.length), behavior: reduce ? "auto" : "smooth" });
     };
-    // phones: scroll the carousel so the given card sits in the middle, with a peek of its neighbours on both sides
-    let slide = 0;
-    const centreCard = (card: HTMLElement) => {
-      if (!eduStage || getComputedStyle(eduStage).display !== "flex") return;
-      const from = eduStage.scrollLeft;
-      const to = card.offsetLeft - (eduStage.clientWidth - card.offsetWidth) / 2;
-      cancelAnimationFrame(slide);
-      if (reduce) return void (eduStage.scrollLeft = to);
-      // our own quick glide (a third of a second); the browser's smooth scroll is slower, and snapping is paused while it runs
-      const t0 = performance.now();
-      eduStage.style.scrollSnapType = "none";
-      const run = (now: number) => {
-        const p = Math.min(1, (now - t0) / 340);
-        eduStage.scrollLeft = from + (to - from) * (1 - Math.pow(1 - p, 3));
-        if (p < 1) slide = requestAnimationFrame(run);
-        else eduStage.style.removeProperty("scroll-snap-type");
-      };
-      slide = requestAnimationFrame(run);
-    };
     const jumpEdu = (i: number) => {
-      if (edu.offsetHeight - eduPin.offsetHeight <= 8) {
-        // phones: the cards are a sideways carousel, so the tab scrolls to its card
-        setEduIndex(i);
-        const card = eduStage?.querySelectorAll<HTMLElement>(".sx-edu-card")[i];
-        if (card) centreCard(card);
-        eduAct = i;
+      if (small.matches) {
+        const card = eduCards[i];
+        if (card) scrollTo({ top: scrollY + card.getBoundingClientRect().top - 150, behavior: reduce ? "auto" : "smooth" });
         return;
       }
       const top = scrollY + edu.getBoundingClientRect().top;
       const span = edu.offsetHeight - eduPin.offsetHeight;
       scrollTo({ top: top + span * ((i + 0.5) / education.length), behavior: reduce ? "auto" : "smooth" });
     };
-    // the carousel tells the tabs which card is in front
-    const onStageScroll = () => {
-      if (!eduStage || getComputedStyle(eduStage).display !== "flex") return;
-      const cards = [...eduStage.querySelectorAll<HTMLElement>(".sx-edu-card")];
-      let best = 0;
-      let gap = Infinity;
-      cards.forEach((c, i) => {
-        const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - eduStage.scrollLeft - eduStage.clientWidth / 2);
-        if (d < gap) {
-          gap = d;
-          best = i;
-        }
-      });
-      if (best !== eduAct) {
-        eduAct = best;
-        setEduIndex(best);
-      }
-    };
-    eduStage?.addEventListener("scroll", onStageScroll, { passive: true });
-    // the cards slide on by themselves, unless you are touching them or the section is off screen
-    let eduHold = 0;
-    const holdEdu = () => (eduHold = performance.now() + 9000);
-    eduStage?.addEventListener("pointerdown", holdEdu, { passive: true });
-    eduStage?.addEventListener("wheel", holdEdu, { passive: true });
-    const eduAuto = window.setInterval(() => {
-      if (!eduStage || reduce || performance.now() < eduHold || getComputedStyle(eduStage).display !== "flex") return;
-      const box = eduStage.getBoundingClientRect();
-      if (box.bottom < 0 || box.top > innerHeight) return;
-      const cards = eduStage.querySelectorAll<HTMLElement>(".sx-edu-card");
-      const next = (eduAct + 1) % cards.length;
-      eduAct = next;
-      setEduIndex(next); // tabs, dots and the front card change together with the slide
-      centreCard(cards[next]);
-    }, 3200);
     const eduTabs = $$<HTMLButtonElement>(".sx-etabs button");
     const onEdu = eduTabs.map((b, i) => {
       const fn = () => jumpEdu(i);
@@ -388,19 +334,17 @@ export function Website() {
         const eduSpan = edu.offsetHeight - eduPin.offsetHeight;
         const rel = eduSpan > 8 ? Math.max(0, Math.min(0.9999, -er.top / eduSpan)) * education.length : eduAct;
         const ei = Math.floor(rel);
-        if (eduStage && eduSpan > 8 && matchMedia("(min-width: 769px) and (max-width: 992px)").matches) {
-          // tablets: an entry taller than the screen scrolls up inside its window before the next entry takes over
-          const stageTop = eduStage.getBoundingClientRect().top - eduPin.getBoundingClientRect().top; // where the window starts inside the pinned screen
-          const card = eduStage.querySelector<HTMLElement>(".sx-edu-card.on");
-          const room = Math.max(240, innerHeight - stageTop - 96);
-          eduStage.style.height = `${Math.min(room, Math.max(240, card ? card.offsetHeight : 0))}px`; // never taller than the content
-          const over = card ? Math.max(0, card.offsetHeight - eduStage.clientHeight) : 0;
-          const t = Math.max(0, Math.min(1, (rel - ei - 0.15) / 0.7));
-          eduStage.style.setProperty("--eshift", `${(-over * t).toFixed(1)}px`);
-        } else if (eduStage) {
-          eduStage.style.removeProperty("--eshift");
-        }
-        if (ei !== eduAct) {
+        if (small.matches) {
+          // small screens: the entries follow each other down the page; the tab of the entry being read is the active one
+          let at = 0;
+          eduCards.forEach((c, i) => {
+            if (c.getBoundingClientRect().top < vh * 0.5) at = i;
+          });
+          if (at !== eduAct) {
+            eduAct = at;
+            setEduIndex(at);
+          }
+        } else if (ei !== eduAct) {
           eduAct = ei;
           setEduIndex(ei);
         }
@@ -516,11 +460,6 @@ export function Website() {
       stopGlide();
       hero.removeEventListener("pointermove", onMove);
       removeEventListener("scroll", onScroll);
-      eduStage?.removeEventListener("scroll", onStageScroll);
-      eduStage?.removeEventListener("pointerdown", holdEdu);
-      eduStage?.removeEventListener("wheel", holdEdu);
-      clearInterval(eduAuto);
-      cancelAnimationFrame(slide);
       removeEventListener("resize", frame);
       rail.forEach((b, i) => b.removeEventListener("click", onRail[i]));
       eduTabs.forEach((b, i) => b.removeEventListener("click", onEdu[i]));
@@ -574,11 +513,23 @@ export function Website() {
                 <i />
                 {experience.badge}
               </div>
+              {/* the name, big enough to be what people remember: the first name solid, the family name as a glowing outline, each letter rising in turn */}
+              <p className="sx-name sx-rv" style={{ "--d": 1 } as CSSProperties} aria-label={owner.name}>
+                {owner.name.split(" ").map((w) => (
+                  <span key={w} className="sx-word" aria-hidden>
+                    {[...w].map((ch, i) => (
+                      <i key={i} style={{ "--i": i } as CSSProperties}>
+                        {ch}
+                      </i>
+                    ))}
+                  </span>
+                ))}
+              </p>
               <h1 className="sx-rv" style={{ "--d": 1 } as CSSProperties}>
                 Interfaces that feel <span>effortless to use.</span>
               </h1>
               <p className="sx-lede sx-rv" style={{ "--d": 2 } as CSSProperties}>
-                I&apos;m {owner.name}, a frontend engineer in Karachi. I design and build fast, polished web products with React, Next.js and TypeScript, from first sketch to launch.
+                Software engineer specializing in React, Next.js, and high-performance web products.
               </p>
               <div className="sx-cta sx-rv" style={{ "--d": 3 } as CSSProperties}>
                 <a className="sx-btn pri" href="#work">
@@ -614,7 +565,7 @@ export function Website() {
                   <span className="sx-mono">{shell.user} — desk</span>
                 </div>
                 <div className="sx-winbody">
-                  <b>Hi, I&apos;m {owner.name}</b>
+                  <b>Hi, I&apos;m {owner.name.split(" ")[0]}</b>
                   <small>Software engineer · React · Next.js · TypeScript</small>
                   <div className="sx-minitiles">
                     {folders.slice(1).map((f, k) => (
@@ -811,7 +762,8 @@ export function Website() {
                       </div>
                     )}
                     {e.kind === "AWARD" && <Award file={e} />}
-                    {e.kind !== "AWARD" && e.notes.length > 0 && (
+                    {e.kind === "CERTIFICATES" && <CertSlider />}
+                    {e.kind !== "AWARD" && e.kind !== "CERTIFICATES" && e.notes.length > 0 && (
                       <ul className="sx-edu-notes">
                         {e.notes.slice(0, 3).map((n) => (
                           <li key={n}>{n}</li>
@@ -820,12 +772,6 @@ export function Website() {
                     )}
                   </article>
                 ))}
-            </div>
-            {/* phones: a slider under the carousel (one dot per card; the current one stretches into a bar) */}
-            <div className="sx-edots" aria-hidden>
-              {education.map((e, i) => (
-                <button key={e.name} type="button" tabIndex={-1} className={i === eduIndex ? "on" : undefined} onClick={() => document.querySelectorAll<HTMLButtonElement>(".sx-etabs button")[i]?.click()} />
-              ))}
             </div>
           </div>
             </div>

@@ -30,7 +30,7 @@ const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
 /** breathing room around the screen, as a share of the free area; tighter on small screens where space is scarce */
 const MARGIN = 0.1;
-const MARGIN_SMALL = 0.02;
+const MARGIN_SMALL = -0.1; // on phones the screen may run a little past the edges, so the folder window fills the width and its text is readable
 
 /**
  * Closest camera distance at which the whole laptop screen fits the free area of the stage (not
@@ -117,7 +117,7 @@ export function CameraController({ focused, leftPx, rightPx, topPx, bottomPx, re
       const freeH = Math.max(0.25, 1 - (topPx + bottomPx) / size.height);
       const dist = focused
         ? fitScreenDistance(aspect, freeW, freeH, size.width < 992 ? MARGIN_SMALL : MARGIN)
-        : THREE.MathUtils.clamp((THREE.MathUtils.lerp(4.1, pose.fitWidth, THREE.MathUtils.clamp((aspect - 0.9) / 0.45, 0, 1)) / freeW) / (2 * t * aspect), cam.limits.minDistance, cam.limits.maxDistance);
+        : THREE.MathUtils.clamp((THREE.MathUtils.lerp(2.4, pose.fitWidth, THREE.MathUtils.clamp((aspect - 0.9) / 0.45, 0, 1)) / freeW) / (2 * t * aspect), cam.limits.minDistance, cam.limits.maxDistance);
 
       const sp = Math.sin(pose.polar);
       // close up, the camera looks at the middle of the real screen
@@ -137,7 +137,7 @@ export function CameraController({ focused, leftPx, rightPx, topPx, bottomPx, re
         const fromT = new THREE.Vector3();
         c.getPosition(fromP);
         c.getTarget(fromT);
-        tween.current = { t0: clock.elapsedTime, dur: opts.intro ? 2.2 : 1.1, ease: opts.intro ? easeOut : easeInOut, fromP, fromT, toP, toT };
+        tween.current = { t0: clock.elapsedTime + (opts.intro ? 1.1 : 0), dur: opts.intro ? 2.4 : 1.1, ease: opts.intro ? easeOut : easeInOut, fromP, fromT, toP, toT };
       }
       sway.current = null;
       quietAt.current = clock.elapsedTime + 2;
@@ -221,7 +221,7 @@ export function CameraController({ focused, leftPx, rightPx, topPx, bottomPx, re
     // run the glide
     const tw = tween.current;
     if (tw) {
-      const p = Math.min(1, (state.clock.elapsedTime - tw.t0) / tw.dur);
+      const p = Math.min(1, Math.max(0, (state.clock.elapsedTime - tw.t0) / tw.dur)); // (the intro waits a moment at the wide shot first)
       const e = tw.ease(p);
       const px = tw.fromP.x + (tw.toP.x - tw.fromP.x) * e;
       const py = tw.fromP.y + (tw.toP.y - tw.fromP.y) * e;

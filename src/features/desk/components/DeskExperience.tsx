@@ -31,6 +31,8 @@ const ease = [0.22, 1, 0.36, 1] as const;
  */
 export function DeskExperience() {
   const open = useDeskStore((s) => s.ch > 0);
+  // on wide screens the details panel steps aside while the terminal is brought back over an open folder
+  const drawerOpen = useDeskStore((s) => s.ch > 0 && s.drawer);
   const terminal = useDeskStore((s) => s.terminal);
   const toggleTerminal = useDeskStore((s) => s.toggleTerminal);
   const custom = useLayoutStore((s) => s.terminalW);
@@ -76,10 +78,10 @@ export function DeskExperience() {
 
             <m.aside
               aria-label="Documents"
-              aria-hidden={!open}
-              inert={!open}
+              aria-hidden={!drawerOpen}
+              inert={!drawerOpen}
               initial={false}
-              animate={{ x: open ? 0 : drawerW + 48, opacity: open ? 1 : 0 }}
+              animate={{ x: drawerOpen ? 0 : drawerW + 48, opacity: drawerOpen ? 1 : 0 }}
               transition={{ duration: 0.6, ease }}
               className="absolute bottom-3 right-3 top-3 z-30 overflow-hidden rounded-[22px] border border-white/10 bg-panel-raised/95 shadow-2xl"
               style={{ width: drawerW }}

@@ -82,7 +82,7 @@ export const Room = memo(function Room({ nameplate: showNameplate = true }: { na
       {showNameplate && (
         <>
         {/* brass nameplate with its own warm light so the engraving catches the eye */}
-        <group position={[-2.1, 0.03, 2.2]} rotation={[0, 0.18, 0]}>
+        <group position={[0, 0.03, 2.2]} rotation={[0, 0, 0]}>
           <RoundedBox args={[2.1, 0.12, 0.55]} radius={0.02} smoothness={3} position={[0, 0.06, 0]} castShadow receiveShadow>
             <meshStandardMaterial color={palette.nameplate.base} roughness={0.5} />
           </RoundedBox>
