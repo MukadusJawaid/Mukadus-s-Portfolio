@@ -52,6 +52,8 @@ export const viewport: Viewport = {
   colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
+  // the on-screen keyboard shrinks the page instead of pushing it up, so the terminal sheet stays above the keyboard
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -5,7 +5,7 @@ export const WIDE_QUERY = "(min-width: 992px)";
 export const drawerWidth = (viewportWidth: number) => Math.min(420, Math.max(340, Math.round(viewportWidth * 0.34)));
 /** Details panel height on narrow screens: a peek that leaves the laptop visible, or nearly full height. */
 export const sheetHeight = (viewportHeight: number, expanded: boolean) =>
-  expanded ? Math.round(viewportHeight * 0.88) : Math.round(Math.min(viewportHeight * 0.55, 480));
+  expanded ? Math.round(viewportHeight * 0.88) : Math.round(Math.min(viewportHeight * 0.6, 540));
 /** space between a panel and the stage content it must not cover */
 export const GAP = 12;
 /** space at the top of the stage taken by the back button and address pill */
