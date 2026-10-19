@@ -237,6 +237,40 @@ export function Website() {
     let eduAct = 0;
     const small = matchMedia("(max-width: 992px)");
     const eduCards = $$<HTMLElement>(".sx-edu-card");
+    const eduStage = $<HTMLElement>(".sx-edu-stage");
+    // small screens: every entry gets its own scroll length, based on its content. A short entry takes little scrolling and a
+    // window as tall as its text (no empty space); a long one glides up inside the window while you scroll.
+    const overs: number[] = [];
+    const natural: number[] = [];
+    const starts: number[] = [];
+    const lens: number[] = [];
+    let room = 0;
+    const sizeStage = (i: number) => {
+      if (eduStage) eduStage.style.height = `${Math.min(room, Math.max(120, (natural[i] ?? 0) + 12))}px`;
+    };
+    const measureEdu = () => {
+      if (!eduStage) return;
+      if (!small.matches) {
+        eduStage.style.removeProperty("height");
+        edu.style.removeProperty("height");
+        return;
+      }
+      const vhNow = innerHeight;
+      room = Math.max(260, vhNow - (eduStage.getBoundingClientRect().top - eduPin.getBoundingClientRect().top) - 20);
+      let at = 0;
+      eduCards.forEach((c, i) => {
+        natural[i] = c.scrollHeight;
+        overs[i] = Math.max(0, natural[i] + 12 - room);
+        starts[i] = at;
+        lens[i] = vhNow * 0.4 + overs[i] / 0.6; // a short entry needs only a little scrolling
+        at += lens[i];
+      });
+      edu.style.height = `${Math.round(at + eduPin.offsetHeight)}px`;
+      sizeStage(Math.max(0, eduAct));
+    };
+    measureEdu();
+    addEventListener("resize", measureEdu);
+    document.fonts?.ready.then(measureEdu);
 
     const setAct = (i: number) => {
       if (i === act) return;
@@ -256,9 +290,8 @@ export function Website() {
       scrollTo({ top: top + span * ((i + 0.5) / experience.files.length), behavior: reduce ? "auto" : "smooth" });
     };
     const jumpEdu = (i: number) => {
-      if (small.matches) {
-        const card = eduCards[i];
-        if (card) scrollTo({ top: scrollY + card.getBoundingClientRect().top - 190, behavior: reduce ? "auto" : "smooth" });
+      if (small.matches && lens[i]) {
+        scrollTo({ top: scrollY + edu.getBoundingClientRect().top + starts[i] + lens[i] * 0.3, behavior: reduce ? "auto" : "smooth" });
         return;
       }
       const top = scrollY + edu.getBoundingClientRect().top;
@@ -331,22 +364,26 @@ export function Website() {
 
       const er = edu.getBoundingClientRect();
       if (er.top <= vh && er.bottom >= 0) {
-        const eduSpan = edu.offsetHeight - eduPin.offsetHeight;
-        const rel = eduSpan > 8 ? Math.max(0, Math.min(0.9999, -er.top / eduSpan)) * education.length : eduAct;
-        const ei = Math.floor(rel);
-        if (small.matches) {
-          // small screens: the entries follow each other down the page; the tab of the entry being read is the active one
-          let at = 0;
-          eduCards.forEach((c, i) => {
-            if (c.getBoundingClientRect().top < vh * 0.5) at = i;
-          });
-          if (at !== eduAct) {
-            eduAct = at;
-            setEduIndex(at);
+        if (small.matches && lens.length) {
+          const y = Math.max(0, -er.top);
+          let ei = lens.length - 1;
+          for (let i = 0; i < lens.length; i++) if (y < starts[i] + lens[i]) { ei = i; break; }
+          const local = Math.max(0, Math.min(1, (y - starts[ei]) / lens[ei]));
+          if (ei !== eduAct) {
+            eduAct = ei;
+            setEduIndex(ei);
+            sizeStage(ei);
           }
-        } else if (ei !== eduAct) {
-          eduAct = ei;
-          setEduIndex(ei);
+          // the text glides up during the first 60% of its entry's scroll, then rests so the last line can be read
+          const t = Math.max(0, Math.min(1, local / 0.6));
+          eduCards[ei]?.style.setProperty("--eshift", `${(-(overs[ei] ?? 0) * t).toFixed(1)}px`);
+        } else {
+          const eduSpan = edu.offsetHeight - eduPin.offsetHeight;
+          const ei = Math.floor((eduSpan > 8 ? Math.max(0, Math.min(0.9999, -er.top / eduSpan)) * education.length : eduAct));
+          if (ei !== eduAct) {
+            eduAct = ei;
+            setEduIndex(ei);
+          }
         }
       }
 
@@ -461,6 +498,7 @@ export function Website() {
       hero.removeEventListener("pointermove", onMove);
       removeEventListener("scroll", onScroll);
       removeEventListener("resize", frame);
+      removeEventListener("resize", measureEdu);
       rail.forEach((b, i) => b.removeEventListener("click", onRail[i]));
       eduTabs.forEach((b, i) => b.removeEventListener("click", onEdu[i]));
     };

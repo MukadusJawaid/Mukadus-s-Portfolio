@@ -605,15 +605,14 @@ html:has(.sx) { scroll-behavior: smooth; scroll-padding-top: 72px; }
 .sx-rel-grid a:hover { border-color: var(--acc-line); color: var(--fg); background: var(--acc-soft); }
 @media (max-width: 768px) { .sx-rel { justify-items: center; } .sx-rel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-/* small screens: the education entries are cards that follow each other down the page (nothing is clipped or hidden), the
-   tabs stay pinned under the top bar and light up for the entry being read, and a tab scrolls to its card */
+/* small screens: Education is pinned like on desktop. The entries swap as you scroll; every card sits in the same cell, and a text
+   taller than the window glides up inside it (a transform set from a height measured once, see measureEdu in Website.tsx) */
 @media (max-width: 992px) {
-  .sx-edusc { height: auto; }
-  .sx-edusc .sx-pin { position: relative; height: auto; align-items: flex-start; padding: 96px 0 110px; overflow: visible; }
-  .sx-edusc .sx-side { display: contents; }
-  .sx-edusc .sx-etabs { position: sticky; top: 64px; z-index: 5; margin: 0 -22px; padding: 10px 22px; justify-content: center; background: color-mix(in oklab, var(--bg) 96%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
-  .sx-edusc .sx-edu-stage { display: grid; gap: 18px; min-height: 0; overflow: visible; height: auto; }
-  .sx-edusc .sx-edu-card, .sx-edusc .sx-edu-card:not(.on) { display: block; animation: none; padding: 22px 18px; border: 1px solid var(--line-strong); border-radius: 22px; background: var(--veil); scroll-margin-top: 190px; }
+  .sx-edusc { height: calc(var(--n) * 60vh + 100svh); } /* a first guess; the real height comes from the content (measureEdu) */
+  .sx-edusc .sx-pin { position: sticky; top: 0; height: 100svh; align-items: flex-start; padding: 80px 0 0; overflow: clip; }
+  .sx-edusc .sx-edu-stage { display: grid; overflow: hidden; min-height: 0; transition: height .3s var(--ease); }
+  .sx-edusc .sx-edu-card, .sx-edusc .sx-edu-card:not(.on) { display: block; grid-area: 1 / 1; align-self: start; animation: none; padding: 4px 0 20px; border: 0; border-radius: 0; background: none; opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s; transform: translate3d(0, var(--eshift, 0px), 0); }
+  .sx-edusc .sx-edu-card.on { opacity: 1; visibility: visible; }
 }
 .sx-rel-grid a.pri { background: var(--ice); border-color: var(--ice); color: var(--on-accent); font-weight: 600; }
 .sx-rel-grid a.pri:hover { background: var(--ice); border-color: var(--ice); color: var(--on-accent); box-shadow: 0 0 22px var(--acc-soft); }
@@ -970,9 +969,8 @@ html:has(.sx) { scroll-behavior: smooth; scroll-padding-top: 72px; }
 .sx-cslider .sx-cert-m { margin: 2px 6px 0; font-size: 13px; color: var(--fg-muted); }
 
 
-/* education on small screens: one column that can shrink, so wide content (the newspaper clipping, the certificate slider) never pushes the cards past the screen */
+/* education on small screens: one column that can shrink, so wide content never pushes the text past the screen */
 @media (max-width: 992px) {
   .sx-edusc .sx-split { grid-template-columns: minmax(0, 1fr); }
   .sx-edusc .sx-split > *, .sx-edusc .sx-edu-stage, .sx-edusc .sx-edu-card { min-width: 0; max-width: 100%; }
-  .sx-edusc .sx-edu-card { overflow: hidden; }
 }

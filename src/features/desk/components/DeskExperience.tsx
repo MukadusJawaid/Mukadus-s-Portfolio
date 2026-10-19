@@ -44,6 +44,12 @@ export function DeskExperience() {
   const tw = terminalWidth(useViewportWidth(), custom);
   const { drawerW, sheetH } = useStageInsets();
 
+  // small screens: reading a file opens the details panel tall (it was too short to read in), and closing the file brings it back
+  const fileOpen = useDeskStore((s) => s.file >= 0);
+  useEffect(() => {
+    if (!wide) useLayoutStore.setState({ sheetExpanded: fileOpen });
+  }, [fileOpen, wide]);
+
   // restore the terminal width the visitor chose last time
   useEffect(() => {
     useLayoutStore.persist.rehydrate();

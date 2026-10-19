@@ -30,7 +30,7 @@ const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
 /** breathing room around the screen, as a share of the free area; tighter on small screens where space is scarce */
 const MARGIN = 0.1;
-const MARGIN_SMALL = -0.1; // on phones the screen may run a little past the edges, so the folder window fills the width and its text is readable
+const MARGIN_SMALL = -0.3; // on phones the screen may run a little past the edges, so the folder window fills the width and its text is readable
 
 /**
  * Closest camera distance at which the whole laptop screen fits the free area of the stage (not
