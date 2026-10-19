@@ -258,7 +258,7 @@ export function Website() {
     const jumpEdu = (i: number) => {
       if (small.matches) {
         const card = eduCards[i];
-        if (card) scrollTo({ top: scrollY + card.getBoundingClientRect().top - 150, behavior: reduce ? "auto" : "smooth" });
+        if (card) scrollTo({ top: scrollY + card.getBoundingClientRect().top - 190, behavior: reduce ? "auto" : "smooth" });
         return;
       }
       const top = scrollY + edu.getBoundingClientRect().top;

@@ -611,9 +611,9 @@ html:has(.sx) { scroll-behavior: smooth; scroll-padding-top: 72px; }
   .sx-edusc { height: auto; }
   .sx-edusc .sx-pin { position: relative; height: auto; align-items: flex-start; padding: 96px 0 110px; overflow: visible; }
   .sx-edusc .sx-side { display: contents; }
-  .sx-edusc .sx-etabs { position: sticky; top: 64px; z-index: 5; margin: 0 -22px; padding: 10px 22px; justify-content: center; background: color-mix(in oklab, var(--bg) 88%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  .sx-edusc .sx-etabs { position: sticky; top: 64px; z-index: 5; margin: 0 -22px; padding: 10px 22px; justify-content: center; background: color-mix(in oklab, var(--bg) 96%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
   .sx-edusc .sx-edu-stage { display: grid; gap: 18px; min-height: 0; overflow: visible; height: auto; }
-  .sx-edusc .sx-edu-card, .sx-edusc .sx-edu-card:not(.on) { display: block; animation: none; padding: 22px 18px; border: 1px solid var(--line-strong); border-radius: 22px; background: var(--veil); scroll-margin-top: 150px; }
+  .sx-edusc .sx-edu-card, .sx-edusc .sx-edu-card:not(.on) { display: block; animation: none; padding: 22px 18px; border: 1px solid var(--line-strong); border-radius: 22px; background: var(--veil); scroll-margin-top: 190px; }
 }
 .sx-rel-grid a.pri { background: var(--ice); border-color: var(--ice); color: var(--on-accent); font-weight: 600; }
 .sx-rel-grid a.pri:hover { background: var(--ice); border-color: var(--ice); color: var(--on-accent); box-shadow: 0 0 22px var(--acc-soft); }
