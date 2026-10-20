@@ -1,11 +1,12 @@
 import { useGLTF } from "@react-three/drei";
+import { MODEL_URLS } from "./modelUrls";
 
 /** The optimized glTF models (meshopt-compressed geometry, WebP textures). */
 export const MODELS = {
-  desk: "/models/desk.glb",
-  laptop: "/models/laptop.glb",
-  plant: "/models/plant.glb",
-  clock: "/models/clock.glb",
+  desk: MODEL_URLS[1],
+  laptop: MODEL_URLS[0],
+  plant: MODEL_URLS[2],
+  clock: MODEL_URLS[3],
 } as const;
 
 /**

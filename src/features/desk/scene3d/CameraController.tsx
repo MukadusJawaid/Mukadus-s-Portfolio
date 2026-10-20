@@ -137,7 +137,7 @@ export function CameraController({ focused, leftPx, rightPx, topPx, bottomPx, re
         const fromT = new THREE.Vector3();
         c.getPosition(fromP);
         c.getTarget(fromT);
-        tween.current = { t0: clock.elapsedTime + (opts.intro ? 1.1 : 0), dur: opts.intro ? 2.4 : 1.1, ease: opts.intro ? easeOut : easeInOut, fromP, fromT, toP, toT };
+        tween.current = { t0: clock.elapsedTime + (opts.intro ? 0.35 : 0), dur: opts.intro ? 1.7 : 1.1, ease: opts.intro ? easeOut : easeInOut, fromP, fromT, toP, toT };
       }
       sway.current = null;
       quietAt.current = clock.elapsedTime + 2;
