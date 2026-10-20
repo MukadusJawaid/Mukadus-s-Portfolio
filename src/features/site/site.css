@@ -608,7 +608,7 @@ html:has(.sx) { scroll-behavior: smooth; scroll-padding-top: 72px; }
 /* small screens: Education is pinned like on desktop. The entries swap as you scroll; every card sits in the same cell, and a text
    taller than the window glides up inside it (a transform set from a height measured once, see measureEdu in Website.tsx) */
 @media (max-width: 992px) {
-  .sx-edusc { height: calc(var(--n) * 60vh + 100svh); } /* a first guess; the real height comes from the content (measureEdu) */
+  .sx-edusc { height: calc(var(--n) * 140svh + 100svh); } /* every entry gets 140% of the screen, a fixed length (see measureEdu) */
   .sx-edusc .sx-pin { position: sticky; top: 0; height: 100svh; align-items: flex-start; padding: 80px 0 0; overflow: clip; }
   .sx-edusc .sx-edu-stage { display: grid; overflow: hidden; min-height: 0; transition: height .3s var(--ease); }
   .sx-edusc .sx-edu-card, .sx-edusc .sx-edu-card:not(.on) { display: block; grid-area: 1 / 1; align-self: start; animation: none; padding: 4px 0 20px; border: 0; border-radius: 0; background: none; opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s; transform: translate3d(0, var(--eshift, 0px), 0); }

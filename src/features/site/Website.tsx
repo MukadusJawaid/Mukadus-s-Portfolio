@@ -238,8 +238,8 @@ export function Website() {
     const small = matchMedia("(max-width: 992px)");
     const eduCards = $$<HTMLElement>(".sx-edu-card");
     const eduStage = $<HTMLElement>(".sx-edu-stage");
-    // small screens: every entry gets its own scroll length, based on its content. A short entry takes little scrolling and a
-    // window as tall as its text (no empty space); a long one glides up inside the window while you scroll.
+    // small screens: the pinned entries. Each has a window as tall as its text (up to the space available), and a longer text glides up
+    // inside it while you scroll.
     const overs: number[] = [];
     const natural: number[] = [];
     const starts: number[] = [];
@@ -265,15 +265,15 @@ export function Website() {
       steadyH = Math.max(steadyH, innerHeight);
       const vhNow = steadyH;
       room = Math.max(260, vhNow - (eduStage.getBoundingClientRect().top - eduPin.getBoundingClientRect().top) - 20);
-      let at = 0;
+      // Every entry has the same scroll length, fixed by the pinned screen's height (not by the text), so what a late font or image does
+      // to the text can never move where an entry begins or ends: the page cannot jump under your finger
+      const L = Math.round(eduPin.offsetHeight * 1.4);
       eduCards.forEach((c, i) => {
         natural[i] = c.scrollHeight;
         overs[i] = Math.max(0, natural[i] + 12 - room);
-        starts[i] = at;
-        lens[i] = vhNow * 0.7 + overs[i] / 0.6; // even a short entry gets enough scrolling that a quick flick cannot skip over it
-        at += lens[i];
+        starts[i] = i * L;
+        lens[i] = L;
       });
-      edu.style.height = `${Math.round(at + eduPin.offsetHeight)}px`;
       sizeStage(Math.max(0, eduAct));
     };
     measureEdu();
@@ -391,8 +391,9 @@ export function Website() {
             setEduIndex(ei);
             sizeStage(ei);
           }
-          // the text glides up during the first 60% of its entry's scroll, then rests so the last line can be read
-          const t = Math.max(0, Math.min(1, local / 0.6));
+          // each entry holds still for its first 18% (so its heading stays in place when you arrive or come back), the text then glides
+          // up during the next 47%, and rests for the last 35% so the last line can be read before the next entry swaps in
+          const t = Math.max(0, Math.min(1, (local - 0.18) / 0.47));
           eduCards[ei]?.style.setProperty("--eshift", `${(-(overs[ei] ?? 0) * t).toFixed(1)}px`);
         } else {
           const eduSpan = edu.offsetHeight - eduPin.offsetHeight;

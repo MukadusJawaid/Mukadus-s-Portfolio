@@ -56,14 +56,15 @@ export function StagePanel({ className = "" }: { className?: string }) {
       )}
 
       {!ready && !failed && (
-        // while the scene loads: Pixel bobs above the name, with a thin progress line that keeps moving
-        <div className="pointer-events-none absolute inset-x-0 top-1/2 z-[5] flex -translate-y-1/2 flex-col items-center gap-3" style={{ left, right }} role="status">
-          <div className="desk-loader-bot">
+        // The loader: Pixel floats over a soft glow above the name. A thin moving line shows that something is loading; Pixel
+        // is drowsy for a moment and wide awake once the scene starts.
+        <div className="absolute inset-x-0 top-1/2 z-[5] flex -translate-y-1/2 flex-col items-center gap-4" style={{ left, right }} role="status">
+          <div className="desk-loader-bot" data-awake={mount3d ? "" : undefined}>
             <RobotBody />
           </div>
-          <p className="font-sans text-xl font-semibold tracking-tight text-white sm:text-2xl">Mukadus Jawaid</p>
-          <p className="font-mono text-xs text-white/60">{mount3d ? "setting up the 3D desk…" : "move or tap to wake the 3D desk"}</p>
-          <span className="desk-loader-bar" aria-hidden />
+          <p className="font-sans text-2xl font-semibold tracking-tight text-white sm:text-3xl">Mukadus Jawaid</p>
+          <p className="-mt-2 font-mono text-xs uppercase tracking-[.22em] text-white/50">Frontend Engineer</p>
+          <span className="desk-loader-bar mt-2" aria-label="Loading the 3D desk" />
         </div>
       )}
 
