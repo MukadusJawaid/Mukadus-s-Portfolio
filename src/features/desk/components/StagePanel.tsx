@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { folders } from "../data/folders";
 import { RobotBody } from "@/features/robot/Robot";
 import { DeskBuddy } from "./DeskBuddy";
-import { useLoadStore } from "../store/useLoadStore";
 import { useStartOnInteraction } from "../lib/useStartOnInteraction";
 import { useStageInsets } from "../lib/insets";
 import { folderTone } from "../lib/tone";
@@ -34,8 +33,7 @@ export function StagePanel({ className = "" }: { className?: string }) {
   const openTermSheet = useLayoutStore((s) => s.openTermSheet);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
-  const progress = useLoadStore((s) => s.progress);
-  // the scene starts right after the page's first paint, without waiting for anyone to move or tap
+  // the scene starts as soon as its files have downloaded (a tap or key press starts it sooner)
   const mount3d = useStartOnInteraction();
   const cur = folders[ch];
   const f = file >= 0 ? cur.files[file] : null;
@@ -61,8 +59,9 @@ export function StagePanel({ className = "" }: { className?: string }) {
           <p className="-mt-2 font-mono text-xs uppercase tracking-[.22em] text-white/70">Frontend Engineer</p>
           {/* the loading line: it fills steadily (a compositor animation, so it keeps moving even while the page is busy setting up the
               scene) and runs the rest of the way when the files have all arrived */}
-          <span className="desk-loader-bar mt-2" aria-label="Loading the 3D desk" style={{ opacity: mount3d ? 1 : 0 }}>
-            <i className={progress >= 100 ? "full" : mount3d ? "creep" : undefined} />
+          {/* the loading line moves from the first moment (the files download and the page settles), then completes as the scene starts */}
+          <span className="desk-loader-bar mt-2" aria-label="Loading the 3D desk">
+            <i className={mount3d ? "done" : "run"} />
           </span>
         </div>
       )}

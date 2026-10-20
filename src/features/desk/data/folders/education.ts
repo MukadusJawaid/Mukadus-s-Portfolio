@@ -76,11 +76,11 @@ export const education: FolderInput = {
       size: "0.6 KB",
       kind: "CERTIFICATES",
       meta: "Competitions, courses and sessions",
-      desc: "Degree, diploma and merit certificate (3rd position) from SSUET and Arena, plus Women Tech Quest 2026 (10Pearls), Microsoft Student Partners and Ambassadors, Buraq, and NCR-CET.",
+      desc: "Diploma (Arena), merit certificate (3rd position, SSUET), plus Women Tech Quest 2026 (10Pearls), Microsoft Student Partners and Ambassadors, Buraq, and NCR-CET.",
       tags: ["3rd position", "Build with AI", "Graphic design", "Microsoft Azure", "MUN"],
       notes: [
         "Women Tech Quest 2026, Build with AI track (10Pearls)",
-        "BS Software Engineering degree (SSUET, 2024) and Diploma in Graphics and Web Design with Distinction (Arena Multimedia, 2022)",
+        "Diploma in Graphics and Web Design with Distinction (Arena Multimedia, 2022)",
         "Certificate of Merit: 3rd position in the BS Software Engineering batch (SSUET, 2024)",
         "Microfest++ graphic designing competition (Microsoft Student Partners, 2020)",
         "Adobe Illustrator Portfolio course (Buraq, 2020)",
