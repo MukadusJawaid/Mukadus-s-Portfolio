@@ -80,8 +80,8 @@ export const education: FolderInput = {
       tags: ["3rd position", "Build with AI", "Graphic design", "Microsoft Azure", "MUN"],
       notes: [
         "BS Software Engineering degree (SSUET, 2024) and Diploma in Graphics and Web Design with Distinction (Arena Multimedia, 2022)",
-        "Certificate of Merit: 3rd position in the BS Software Engineering batch (SSUET, 2024)",
         "Women Tech Quest 2026, Build with AI track (10Pearls)",
+        "Certificate of Merit: 3rd position in the BS Software Engineering batch (SSUET, 2024)",
         "Microfest++ graphic designing competition (Microsoft Student Partners, 2020)",
         "Adobe Illustrator Portfolio course (Buraq, 2020)",
         "SharePoint in Microsoft Azure hands-on session (Microsoft Student Ambassadors, 2020)",

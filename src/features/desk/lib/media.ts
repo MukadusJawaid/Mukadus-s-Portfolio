@@ -28,13 +28,35 @@ export function useViewportWidth(): number {
 }
 
 /** Current window height. 900 on the server. */
+/**
+ * The page height used for panel sizes. While a text field has the on-screen keyboard open the window height shrinks by the
+ * keyboard's height, which must not shrink the panels (a panel that opens while the keyboard is still showing would be tiny),
+ * so a shrink caused by the keyboard is ignored until the width changes or the field loses focus.
+ */
+let steady = 0;
+let steadyW = 0;
+function viewportHeightNow() {
+  const h = window.innerHeight;
+  const w = window.innerWidth;
+  const typing = document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement;
+  if (w !== steadyW || h > steady || !typing) {
+    steady = h;
+    steadyW = w;
+  }
+  return steady;
+}
+
 export function useViewportHeight(): number {
   return useSyncExternalStore(
     (cb) => {
       window.addEventListener("resize", cb);
-      return () => window.removeEventListener("resize", cb);
+      window.addEventListener("focusout", cb);
+      return () => {
+        window.removeEventListener("resize", cb);
+        window.removeEventListener("focusout", cb);
+      };
     },
-    () => window.innerHeight,
+    viewportHeightNow,
     () => 900,
   );
 }

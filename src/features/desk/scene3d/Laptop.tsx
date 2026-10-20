@@ -131,10 +131,10 @@ export function Laptop() {
       probe[1].set(...c[2]).project(camera);
       const px = Math.hypot(((probe[0].x - probe[1].x) * size.width) / 2, ((probe[0].y - probe[1].y) * size.height) / 2) * gl.getPixelRatio();
       const need = px / fit.current.rx / SW;
-      // zoomed far out (the screen is under about half of the view width): sleep, with a big hello instead of tiny text.
+      // zoomed far out (the screen is under about a third of the view width): sleep, with a big hello instead of tiny text.
       // Relative to the window, so the normal framing never sleeps and the folders stay clickable.
       const share = px / gl.getPixelRatio() / size.width;
-      const far = share < (view.current.far ? 0.5 : 0.44);
+      const far = share < (view.current.far ? 0.34 : 0.3);
       if (far !== !!view.current.far) {
         view.current.far = far;
         view.current.wake = far ? undefined : 0;

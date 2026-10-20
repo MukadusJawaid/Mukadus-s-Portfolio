@@ -58,8 +58,13 @@ export function MouseBuddy() {
       const a = free ? undefined : anchor?.getBoundingClientRect();
       const home = !free && a && a.width > 0;
       // on a touch screen it docks in the bottom-right corner instead of following a pointer
-      const cx = home ? a.left + a.width / 2 : touch ? innerWidth - 40 : to.x;
-      const cy = home ? a.top + a.height / 2 : touch ? innerHeight - 92 : to.y;
+      // while a project preview is active the mouse is inside an embedded page (the robot hears nothing from it, and would be
+      // left stranded), so it waits beside the active project in the list on the left until the preview is released
+      const listItem = free && !touch ? document.querySelector<HTMLElement>(".sx-live-on") && root?.querySelector<HTMLElement>(".sx-index a.on") : null;
+      const li = listItem?.getBoundingClientRect();
+      const waiting = Boolean(li && li.width > 0 && li.bottom > 70 && li.top < innerHeight - 40);
+      const cx = waiting ? Math.max(24, li!.left - 34) : home ? a.left + a.width / 2 : touch ? innerWidth - 40 : to.x;
+      const cy = waiting ? li!.top + li!.height / 2 : home ? a.top + a.height / 2 : touch ? innerHeight - 92 : to.y;
       // smaller as the cursor, so it covers as little of the page as possible
       const goal = home ? a.width / W : 0.78;
       const speed = performance.now() < flightUntil ? 0.1 : home ? 0.25 : 0.38;
@@ -81,6 +86,10 @@ export function MouseBuddy() {
         const k = Math.min(1, d / 180) * 3.4;
         ex = (dx / d) * k;
         ey = (dy / d) * k;
+      } else if (waiting) {
+        // waiting beside the list: it looks across at the preview it is watching
+        ex = 3;
+        ey = 0;
       } else if (touch) {
         // docked: the eyes look the way the page is scrolling
         look += (Math.max(-1, Math.min(1, (scrollY - lastY) / 12)) - look) * 0.15;
@@ -99,7 +108,7 @@ export function MouseBuddy() {
       el.style.setProperty("--ex", `${ex.toFixed(2)}px`);
       el.style.setProperty("--ey", `${ey.toFixed(2)}px`);
       el.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0) rotate(${lean.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
-      const show = Boolean(home) || inside || touch;
+      const show = Boolean(home) || inside || touch || waiting;
       if (show !== shown) {
         shown = show;
         el.classList.toggle("on", show);
@@ -115,8 +124,18 @@ export function MouseBuddy() {
       if (free) el.classList.toggle("happy", Boolean((e.target as Element | null)?.closest("a, button, [role=button]")));
     };
     const leave = () => (inside = false);
-    const down = () => el.classList.add("squash");
-    const up = () => el.classList.remove("squash");
+    // a click squashes it for a moment. It lets go by itself, because the release can happen inside an embedded page (which
+    // the parent never hears about) and the robot would stay flattened
+    let letGo = 0;
+    const up = () => {
+      clearTimeout(letGo);
+      el.classList.remove("squash");
+    };
+    const down = () => {
+      el.classList.add("squash");
+      clearTimeout(letGo);
+      letGo = window.setTimeout(up, 260);
+    };
     // tapping the docked robot takes you back to the top
     const tap = () => {
       if (touch && free) scrollTo({ top: 0, behavior: "smooth" });
@@ -128,6 +147,8 @@ export function MouseBuddy() {
     document.documentElement.addEventListener("pointerleave", leave);
     addEventListener("pointerdown", down);
     addEventListener("pointerup", up);
+    addEventListener("pointercancel", up);
+    addEventListener("blur", up);
     root?.classList.toggle("has-buddy", free && !touch);
     el.classList.toggle("free", free);
     el.classList.toggle("dock", free && touch);
@@ -140,6 +161,9 @@ export function MouseBuddy() {
       document.documentElement.removeEventListener("pointerleave", leave);
       removeEventListener("pointerdown", down);
       removeEventListener("pointerup", up);
+      removeEventListener("pointercancel", up);
+      removeEventListener("blur", up);
+      clearTimeout(letGo);
       root?.classList.remove("has-buddy");
     };
   }, [wide]);

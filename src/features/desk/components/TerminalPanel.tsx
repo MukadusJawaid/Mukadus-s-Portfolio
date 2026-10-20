@@ -158,9 +158,13 @@ export function TerminalPanel({ className = "", onCollapse, closeAsCross }: Prop
             e.preventDefault();
             const typed = value.trim();
             if (typed && past.current.at(-1) !== typed) past.current.push(typed); // also commands such as "clear", which wipe the log
+            const before = useDeskStore.getState();
             run(value);
             setValue("");
             at.current = -1;
+            // a command that opens a folder or a file leads to the details panel: put the keyboard away so the panel gets the whole screen
+            const after = useDeskStore.getState();
+            if (after.ch !== before.ch || after.file !== before.file) inputRef.current?.blur();
           }}
         >
           <label htmlFor="cmd" className="flex shrink-0 flex-wrap items-baseline gap-x-2">

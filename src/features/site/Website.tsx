@@ -245,6 +245,8 @@ export function Website() {
     const starts: number[] = [];
     const lens: number[] = [];
     let room = 0;
+    let steadyW = 0;
+    let steadyH = 0;
     const sizeStage = (i: number) => {
       if (eduStage) eduStage.style.height = `${Math.min(room, Math.max(120, (natural[i] ?? 0) + 12))}px`;
     };
@@ -255,22 +257,37 @@ export function Website() {
         edu.style.removeProperty("height");
         return;
       }
-      const vhNow = innerHeight;
+      // the phone's address bar growing and shrinking changes innerHeight while you scroll: measure with the tallest height seen at this width, so the entries never shift under your finger
+      if (innerWidth !== steadyW) {
+        steadyW = innerWidth;
+        steadyH = 0;
+      }
+      steadyH = Math.max(steadyH, innerHeight);
+      const vhNow = steadyH;
       room = Math.max(260, vhNow - (eduStage.getBoundingClientRect().top - eduPin.getBoundingClientRect().top) - 20);
       let at = 0;
       eduCards.forEach((c, i) => {
         natural[i] = c.scrollHeight;
         overs[i] = Math.max(0, natural[i] + 12 - room);
         starts[i] = at;
-        lens[i] = vhNow * 0.4 + overs[i] / 0.6; // a short entry needs only a little scrolling
+        lens[i] = vhNow * 0.7 + overs[i] / 0.6; // even a short entry gets enough scrolling that a quick flick cannot skip over it
         at += lens[i];
       });
       edu.style.height = `${Math.round(at + eduPin.offsetHeight)}px`;
       sizeStage(Math.max(0, eduAct));
     };
     measureEdu();
-    addEventListener("resize", measureEdu);
+    // re-measure when the width changes (rotation, resize) or content settles, not on every address-bar movement
+    let lastW = innerWidth;
+    const onResizeEdu = () => {
+      if (innerWidth !== lastW) {
+        lastW = innerWidth;
+        measureEdu();
+      }
+    };
+    addEventListener("resize", onResizeEdu);
     document.fonts?.ready.then(measureEdu);
+    window.addEventListener("load", measureEdu);
 
     const setAct = (i: number) => {
       if (i === act) return;
@@ -498,7 +515,8 @@ export function Website() {
       hero.removeEventListener("pointermove", onMove);
       removeEventListener("scroll", onScroll);
       removeEventListener("resize", frame);
-      removeEventListener("resize", measureEdu);
+      removeEventListener("resize", onResizeEdu);
+      window.removeEventListener("load", measureEdu);
       rail.forEach((b, i) => b.removeEventListener("click", onRail[i]));
       eduTabs.forEach((b, i) => b.removeEventListener("click", onEdu[i]));
     };
