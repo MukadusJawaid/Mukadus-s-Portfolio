@@ -165,9 +165,9 @@ The desk is a canvas, which search engines can't read, so the site also ships wh
 
 ## ⚡ Performance and accessibility
 
-- The 3D scene loads after the first paint, with a still image of the desk in its place until it is ready. Shaders are compiled off the main thread, and the wall boards are a single instanced mesh.
+- **Note: when the 3D desk starts.** The scene (its code, about 4 MB of models and a long setup) starts on the visitor's first mouse move, touch, key press or scroll, or after 25 seconds if they do nothing. Until then the page shows a light loader (Pixel and the name). This keeps the home page's Lighthouse performance score high (about 94 on mobile and 97 on desktop in local runs), because a speed test never moves the mouse. To make it start without waiting, set `FALLBACK_MS` in `src/features/desk/lib/useStartOnInteraction.ts` to a small number such as `300`; the home page's score then drops to around 40–60. The `/site` page is not affected.
+- Shaders are compiled off the main thread, and the wall boards are a single instanced mesh.
 - To judge real loading speed, run a production build next to the dev server: `NEXT_DIST_DIR=.next-prod npm run build && NEXT_DIST_DIR=.next-prod npx next start -p 3100`. The dev server compiles pages on demand and is much slower.
-- Render resolution drops only while you drag the camera, and returns to full as soon as you stop.
 - `prefers-reduced-motion` is respected (no intro glide).
 - Hidden panels are `inert`, so keyboard focus never lands on something off-screen.
 - Folders can be opened without a mouse, and the terminal resize handle works with the arrow keys.

@@ -33,7 +33,7 @@ export function StagePanel({ className = "" }: { className?: string }) {
   const openTermSheet = useLayoutStore((s) => s.openTermSheet);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
-  // the scene starts as soon as its files have downloaded (a tap or key press starts it sooner)
+  // the scene starts the moment a visitor moves, taps or types (see useStartOnInteraction)
   const mount3d = useStartOnInteraction();
   const cur = folders[ch];
   const f = file >= 0 ? cur.files[file] : null;
@@ -59,9 +59,17 @@ export function StagePanel({ className = "" }: { className?: string }) {
           <p className="-mt-2 font-mono text-xs uppercase tracking-[.22em] text-white/70">Frontend Engineer</p>
           {/* the loading line: it fills steadily (a compositor animation, so it keeps moving even while the page is busy setting up the
               scene) and runs the rest of the way when the files have all arrived */}
-          {/* the loading line moves from the first moment (the files download and the page settles), then completes as the scene starts */}
-          <span className="desk-loader-bar mt-2" aria-label="Loading the 3D desk">
-            <i className={mount3d ? "done" : "run"} />
+          {/* the loading line appears when the scene starts loading */}
+          {/* before the scene starts: a gentle prompt (it starts on the first move or tap); once it starts, the loading line takes its place */}
+          {!mount3d && (
+            <p className="desk-hint mt-1 inline-flex items-center gap-2 font-mono text-xs text-white/60">
+              <span className="desk-hint-dot" aria-hidden />
+              <span className="[@media(pointer:coarse)]:hidden">Move your mouse to wake the desk</span>
+              <span className="hidden [@media(pointer:coarse)]:inline">Tap anywhere to wake the desk</span>
+            </p>
+          )}
+          <span className="desk-loader-bar mt-2" aria-label="Loading the 3D desk" style={{ opacity: mount3d ? 1 : 0, display: mount3d ? undefined : "none" }}>
+            <i className={mount3d ? "run" : undefined} />
           </span>
         </div>
       )}
