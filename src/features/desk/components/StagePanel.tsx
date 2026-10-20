@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { TransitionLink } from "@/features/transition/TransitionLink";
 import { ArrowLeft, Globe, Minus, Plus, ScanSearch, SquareTerminal } from "lucide-react";
@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { folders } from "../data/folders";
 import { RobotBody } from "@/features/robot/Robot";
 import { DeskBuddy } from "./DeskBuddy";
+import { useStartOnInteraction } from "../lib/useStartOnInteraction";
+import { MODELS } from "../scene3d/models";
 import { useStageInsets } from "../lib/insets";
 import { folderTone } from "../lib/tone";
 import { useDeskStore } from "../store/useDeskStore";
@@ -32,6 +34,13 @@ export function StagePanel({ className = "" }: { className?: string }) {
   const openTermSheet = useLayoutStore((s) => s.openTermSheet);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+  // the scene starts when someone is there (first move, touch or key); the models download quietly in the meantime, so it starts fast
+  const mount3d = useStartOnInteraction();
+  useEffect(() => {
+    const warm = () => Object.values(MODELS).forEach((u) => fetch(u, { priority: "low" } as RequestInit).catch(() => {}));
+    const id = window.setTimeout(warm, 1500);
+    return () => window.clearTimeout(id);
+  }, []);
 
   const cur = folders[ch];
   const f = file >= 0 ? cur.files[file] : null;
@@ -40,7 +49,7 @@ export function StagePanel({ className = "" }: { className?: string }) {
   return (
     <section aria-label="Desk" className={`relative min-h-0 min-w-0 overflow-hidden rounded-[22px] bg-stage ${className}`}>
       {/* nothing of the desk is drawn until the live scene is ready: a plain stage with a small loader, then the scene fades in */}
-      {!failed && (
+      {!failed && mount3d && (
         <div className="absolute inset-0 transition-opacity duration-700" style={{ opacity: ready ? 1 : 0 }}>
           <DeskScene onReady={() => setReady(true)} onFail={() => setFailed(true)} />
         </div>
@@ -53,7 +62,7 @@ export function StagePanel({ className = "" }: { className?: string }) {
             <RobotBody />
           </div>
           <p className="font-sans text-xl font-semibold tracking-tight text-white sm:text-2xl">Mukadus Jawaid</p>
-          <p className="font-mono text-xs text-white/60">setting up the 3D desk…</p>
+          <p className="font-mono text-xs text-white/60">{mount3d ? "setting up the 3D desk…" : "move or tap to wake the 3D desk"}</p>
           <span className="desk-loader-bar" aria-hidden />
         </div>
       )}
