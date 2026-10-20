@@ -101,6 +101,15 @@ const SKILL_ICONS: Record<string, LucideIcon> = {
   "practices-and-tools.md": Wrench,
 };
 
+const NAV_HINT: Record<(typeof NAV)[number][0], string> = {
+  work: "Things I've built",
+  experience: "Where I've worked",
+  skills: "What I build with",
+  education: "Where I learned",
+  about: "A bit about me",
+  contact: "Let's build something",
+};
+
 const NAV_ICONS: Record<(typeof NAV)[number][0], LucideIcon> = {
   work: FolderKanban,
   experience: Briefcase,
@@ -557,7 +566,11 @@ export function Website() {
       </nav>
 
       <ScrollTop />
-      <MenuDrawer items={NAV.map(([id, label]) => ({ id, label, Icon: NAV_ICONS[id] }))} />
+      <MenuDrawer
+        items={NAV.map(([id, label]) => ({ id, label, Icon: NAV_ICONS[id], hint: NAV_HINT[id] }))}
+        name={owner.name}
+        socials={contact.links.map((l) => ({ label: clean(l.t), href: l.url }))}
+      />
 
       <main id="top">
         <header className="sx-hero" style={accent("intro")}>

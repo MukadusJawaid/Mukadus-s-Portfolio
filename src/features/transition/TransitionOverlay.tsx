@@ -57,6 +57,8 @@ export function TransitionOverlay() {
 
     (async () => {
       el.dataset.state = "in";
+      // the new page holds its big name (hero letters) until the panel lifts, so the name animation plays in view, not under the panel
+      document.documentElement.dataset.reveal = "wait";
       await wait(FADE_IN);
       const shownAt = performance.now();
       const landed = new Promise<void>((res) => (arrived.current = res));
@@ -69,6 +71,7 @@ export function TransitionOverlay() {
       await wait(Math.max(0, MIN_HOLD - (performance.now() - shownAt)));
       window.scrollTo(0, 0);
       el.dataset.state = "out";
+      delete document.documentElement.dataset.reveal;
       await wait(FADE_OUT);
       el.dataset.state = "idle";
       busy.current = false;

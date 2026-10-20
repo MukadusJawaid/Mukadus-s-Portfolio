@@ -29,15 +29,12 @@ html.has-robot :is(a[href], button:not(:disabled), [role="button"], [role="tab"]
 .desk-loader-bot { position: relative; filter: drop-shadow(0 0 22px color-mix(in oklab, var(--ice) 45%, transparent)); }
 .desk-loader-bot svg { display: block; width: 64px; height: auto; overflow: visible; }
 .desk-loader-bar { position: relative; width: 140px; height: 3px; overflow: hidden; border-radius: 3px; background: rgb(255 255 255 / .12); }
-.desk-loader-bar::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 40%; border-radius: 3px; background: var(--ice); animation: desk-load 1.2s ease-in-out infinite; }
-@keyframes desk-load { 0% { transform: translateX(-100%); } 100% { transform: translateX(260%); } }
-@media (prefers-reduced-motion: reduce) { .desk-loader-bar::after { animation: none; width: 100%; } }
-
+@media (prefers-reduced-motion: reduce) { 
 /* the loader's robot is "asleep" (eyes half shut, gently floating) until the desk is started, then wide awake */
 .desk-loader-bot[data-awake] .bd-eyes { animation: none; }
-.desk-loader-bot:not([data-awake]) .bd-eyes { transform: scaleY(.25); transform-box: fill-box; transform-origin: center; }
-.desk-loader-bot .bd-eyes { transition: transform .35s ease; }
 .desk-loader-bot { animation: desk-float 3.2s ease-in-out infinite; }
 @keyframes desk-float { 50% { transform: translateY(-8px); } }
 
 @media (prefers-reduced-motion: reduce) { .desk-loader-bot { animation: none; } }
+.desk-loader-bar { transition: opacity .3s; }
+.desk-loader-bar i { position: absolute; inset: 0; border-radius: 3px; background: var(--ice); transform-origin: left; transition: transform .35s ease-out; }

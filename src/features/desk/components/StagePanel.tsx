@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import { TransitionLink } from "@/features/transition/TransitionLink";
 import { ArrowLeft, Globe, Minus, Plus, ScanSearch, SquareTerminal } from "lucide-react";
@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { folders } from "../data/folders";
 import { RobotBody } from "@/features/robot/Robot";
 import { DeskBuddy } from "./DeskBuddy";
+import { useLoadStore } from "../store/useLoadStore";
 import { useStartOnInteraction } from "../lib/useStartOnInteraction";
-import { MODELS } from "../scene3d/models";
 import { useStageInsets } from "../lib/insets";
 import { folderTone } from "../lib/tone";
 import { useDeskStore } from "../store/useDeskStore";
@@ -34,13 +34,9 @@ export function StagePanel({ className = "" }: { className?: string }) {
   const openTermSheet = useLayoutStore((s) => s.openTermSheet);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
-  // the scene starts when someone is there (first move, touch or key); the models download quietly in the meantime, so it starts fast
+  const progress = useLoadStore((s) => s.progress);
+  // the scene starts when someone is there (first move, touch or key); until then the page stays light
   const mount3d = useStartOnInteraction();
-  useEffect(() => {
-    const warm = () => Object.values(MODELS).forEach((u) => fetch(u, { priority: "low" } as RequestInit).catch(() => {}));
-    const id = window.setTimeout(warm, 1500);
-    return () => window.clearTimeout(id);
-  }, []);
 
   const cur = folders[ch];
   const f = file >= 0 ? cur.files[file] : null;
@@ -58,13 +54,16 @@ export function StagePanel({ className = "" }: { className?: string }) {
       {!ready && !failed && (
         // The loader: Pixel floats over a soft glow above the name. A thin moving line shows that something is loading; Pixel
         // is drowsy for a moment and wide awake once the scene starts.
-        <div className="absolute inset-x-0 top-1/2 z-[5] flex -translate-y-1/2 flex-col items-center gap-4" style={{ left, right }} role="status">
+        <div className="absolute inset-y-0 left-0 right-0 z-[5] flex flex-col items-center justify-center gap-4 min-[992px]:left-[clamp(372px,calc(27vw+12px),532px)]" role="status">
           <div className="desk-loader-bot" data-awake={mount3d ? "" : undefined}>
             <RobotBody />
           </div>
           <p className="font-sans text-2xl font-semibold tracking-tight text-white sm:text-3xl">Mukadus Jawaid</p>
-          <p className="-mt-2 font-mono text-xs uppercase tracking-[.22em] text-white/50">Frontend Engineer</p>
-          <span className="desk-loader-bar mt-2" aria-label="Loading the 3D desk" />
+          <p className="-mt-2 font-mono text-xs uppercase tracking-[.22em] text-white/70">Frontend Engineer</p>
+          {/* the line is only there once the scene is loading, and it fills with the real download progress (no endless looping) */}
+          <span className="desk-loader-bar mt-2" aria-label="Loading the 3D desk" style={{ opacity: mount3d ? 1 : 0 }}>
+            <i style={{ transform: `scaleX(${Math.max(0.06, progress / 100)})` }} />
+          </span>
         </div>
       )}
 

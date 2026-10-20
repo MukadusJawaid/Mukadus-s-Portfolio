@@ -3,13 +3,14 @@
 import { Component, memo, useEffect, type ReactNode } from "react";
 import * as THREE from "three";
 import { Canvas, useThree } from "@react-three/fiber";
-import { Environment, Lightformer } from "@react-three/drei";
+import { Environment, Lightformer, useProgress } from "@react-three/drei";
 import { camera as cam } from "../data/scene3d";
 import { useStageInsets } from "../lib/insets";
 import { useViewportWidth } from "../lib/media";
 import { TOP_PX } from "../lib/layout";
 import { useDeskStore } from "../store/useDeskStore";
 import { useLayoutStore } from "../store/useLayoutStore";
+import { useLoadStore } from "../store/useLoadStore";
 import { CameraController } from "./CameraController";
 import { preloadModels } from "./models";
 import { Room } from "./Room";
@@ -111,6 +112,12 @@ function Scene({ onSettled }: { onSettled: () => void }) {
   );
 }
 
+function LoadProgress() {
+  const progress = useProgress((s) => s.progress);
+  useEffect(() => useLoadStore.setState({ progress }), [progress]);
+  return null;
+}
+
 export default function DeskScene({ onReady, onFail }: Props) {
   return (
     <Boundary onFail={onFail}>
@@ -122,6 +129,7 @@ export default function DeskScene({ onReady, onFail }: Props) {
         gl={{ antialias: true, powerPreference: "high-performance", toneMappingExposure: 1.05 }}
         className="!absolute inset-0 cursor-grab active:cursor-grabbing"
       >
+        <LoadProgress />
         <Scene onSettled={onReady} />
       </Canvas>
     </Boundary>
