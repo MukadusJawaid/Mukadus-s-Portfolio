@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { deskSession } from "./session";
 
 /** The 3D files, listed here (not in the scene code) so they can be fetched without loading the 3D libraries. */
-const SETTLE_MS = 4500;
+const SETTLE_MS = 8000;
 const FILES = ["/models/laptop.glb", "/models/desk.glb", "/models/plant.glb", "/models/clock.glb"];
 
 /**

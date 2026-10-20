@@ -37,7 +37,7 @@ html.has-robot :is(a[href], button:not(:disabled), [role="button"], [role="tab"]
 @media (prefers-reduced-motion: reduce) { .desk-loader-bot { animation: none; } }
 .desk-loader-bar { transition: opacity .3s; }
 .desk-loader-bar i { position: absolute; inset: 0; border-radius: 3px; background: var(--ice); transform-origin: left; transform: scaleX(.04); }
-.desk-loader-bar i.run { animation: desk-run 4.5s cubic-bezier(.3, .1, .4, 1) forwards; }
+.desk-loader-bar i.run { animation: desk-run 8s cubic-bezier(.3, .1, .4, 1) forwards; }
 .desk-loader-bar i.done { transform: scaleX(1); transition: transform .35s ease-out; }
 @keyframes desk-run { from { transform: scaleX(.04); } to { transform: scaleX(.96); } }
 @media (prefers-reduced-motion: reduce) { .desk-loader-bar i.run { animation: none; transform: scaleX(.5); } }
