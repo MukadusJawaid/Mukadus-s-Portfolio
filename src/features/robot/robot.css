@@ -25,16 +25,19 @@
 /* on the 3D desk page the robot stands in for the arrow over anything clickable; text fields keep their text cursor */
 html.has-robot :is(a[href], button:not(:disabled), [role="button"], [role="tab"], summary) { cursor: none !important; }
 
-/* the loading screen of the desk: Pixel floats over a soft glow, and a thin line slides back and forth under the name */
+/* the loading screen of the desk: Pixel floats over a soft glow, and a thin line fills under the name */
 .desk-loader-bot { position: relative; filter: drop-shadow(0 0 22px color-mix(in oklab, var(--ice) 45%, transparent)); }
 .desk-loader-bot svg { display: block; width: 64px; height: auto; overflow: visible; }
 .desk-loader-bar { position: relative; width: 140px; height: 3px; overflow: hidden; border-radius: 3px; background: rgb(255 255 255 / .12); }
-@media (prefers-reduced-motion: reduce) { 
-/* the loader's robot is "asleep" (eyes half shut, gently floating) until the desk is started, then wide awake */
+/* the loader's robot floats gently while the desk loads */
 .desk-loader-bot[data-awake] .bd-eyes { animation: none; }
 .desk-loader-bot { animation: desk-float 3.2s ease-in-out infinite; }
 @keyframes desk-float { 50% { transform: translateY(-8px); } }
 
 @media (prefers-reduced-motion: reduce) { .desk-loader-bot { animation: none; } }
 .desk-loader-bar { transition: opacity .3s; }
-.desk-loader-bar i { position: absolute; inset: 0; border-radius: 3px; background: var(--ice); transform-origin: left; transition: transform .35s ease-out; }
+.desk-loader-bar i { position: absolute; inset: 0; border-radius: 3px; background: var(--ice); transform-origin: left; transform: scaleX(.04); }
+.desk-loader-bar i.creep { animation: desk-creep 14s cubic-bezier(.12, .7, .25, 1) forwards; }
+.desk-loader-bar i.full { transform: scaleX(1); transition: transform .4s ease-out; }
+@keyframes desk-creep { to { transform: scaleX(.88); } }
+@media (prefers-reduced-motion: reduce) { .desk-loader-bar i.creep { animation: none; transform: scaleX(.5); } }

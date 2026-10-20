@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import { TransitionLink } from "@/features/transition/TransitionLink";
 import { ArrowLeft, Globe, Minus, Plus, ScanSearch, SquareTerminal } from "lucide-react";
@@ -10,7 +10,6 @@ import { folders } from "../data/folders";
 import { RobotBody } from "@/features/robot/Robot";
 import { DeskBuddy } from "./DeskBuddy";
 import { useLoadStore } from "../store/useLoadStore";
-import { MODEL_URLS } from "../scene3d/modelUrls";
 import { useStartOnInteraction } from "../lib/useStartOnInteraction";
 import { useStageInsets } from "../lib/insets";
 import { folderTone } from "../lib/tone";
@@ -36,15 +35,8 @@ export function StagePanel({ className = "" }: { className?: string }) {
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const progress = useLoadStore((s) => s.progress);
-  // while the page sits idle, the 3D files download quietly (network only, no processing), so the scene starts quickly when someone arrives
-  useEffect(() => {
-    const warm = () => MODEL_URLS.forEach((u) => fetch(u, { priority: "low" } as RequestInit).catch(() => {}));
-    const id = window.setTimeout(warm, 2500);
-    return () => window.clearTimeout(id);
-  }, []);
-  // the scene starts when someone is there (first move, touch or key); until then the page stays light
+  // the scene starts right after the page's first paint, without waiting for anyone to move or tap
   const mount3d = useStartOnInteraction();
-
   const cur = folders[ch];
   const f = file >= 0 ? cur.files[file] : null;
   const overview = ch === 0;
@@ -67,9 +59,10 @@ export function StagePanel({ className = "" }: { className?: string }) {
           </div>
           <p className="font-sans text-2xl font-semibold tracking-tight text-white sm:text-3xl">Mukadus Jawaid</p>
           <p className="-mt-2 font-mono text-xs uppercase tracking-[.22em] text-white/70">Frontend Engineer</p>
-          {/* the line is only there once the scene is loading, and it fills with the real download progress (no endless looping) */}
+          {/* the loading line: it fills steadily (a compositor animation, so it keeps moving even while the page is busy setting up the
+              scene) and runs the rest of the way when the files have all arrived */}
           <span className="desk-loader-bar mt-2" aria-label="Loading the 3D desk" style={{ opacity: mount3d ? 1 : 0 }}>
-            <i style={{ transform: `scaleX(${Math.max(0.06, progress / 100)})` }} />
+            <i className={progress >= 100 ? "full" : mount3d ? "creep" : undefined} />
           </span>
         </div>
       )}

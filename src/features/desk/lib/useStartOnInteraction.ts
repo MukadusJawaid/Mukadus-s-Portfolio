@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { deskSession } from "./session";
 
 /**
- * Turns true when a person shows up: the first mouse movement, touch, key or wheel turn (a real visitor does one of these within
- * a moment of arriving). Automated page-speed tests do none of them, so the page is measured without the heavy 3D scene, and
- * someone who is only looking still gets the desk after a few seconds. Coming back from the website it starts immediately.
+ * Turns true a moment after the page has loaded and painted its first frame, so the loader shows first and the 3D scene starts
+ * straight away: nobody has to tap or move. A tap, key press or mouse move starts it even sooner. Coming back from the website
+ * it starts immediately.
  */
 export function useStartOnInteraction() {
   const [started, setStarted] = useState(deskSession.returning);
@@ -15,9 +15,13 @@ export function useStartOnInteraction() {
     const start = () => setStarted(true);
     const events = ["pointermove", "pointerdown", "keydown", "wheel", "touchstart"] as const;
     events.forEach((e) => addEventListener(e, start, { passive: true, once: true }));
-    const idle = window.setTimeout(start, 6000);
+    let timer = 0;
+    const soon = () => (timer = window.setTimeout(start, 150));
+    if (document.readyState === "complete") soon();
+    else addEventListener("load", soon, { once: true });
     return () => {
-      window.clearTimeout(idle);
+      window.clearTimeout(timer);
+      removeEventListener("load", soon);
       events.forEach((e) => removeEventListener(e, start));
     };
   }, []);
