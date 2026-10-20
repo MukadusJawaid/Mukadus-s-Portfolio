@@ -987,3 +987,11 @@ html:has(.sx) { scroll-behavior: smooth; scroll-padding-top: 72px; }
 @keyframes sx-live-pulse { 50% { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) { .sx-live-on i { animation: none; } }
 @media (max-width: 420px) { .sx-live-on { padding: 3px 8px; font-size: 10.5px; } }
+
+/* the window bar on narrow screens: the three dots and the status pill keep their size (they were being squeezed into thin ovals
+   by the long address), the address shrinks with an ellipsis instead, and phones may not enlarge the small text */
+.sx { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+.sx-bar > i { flex: none; }
+.sx-bar .sx-url { min-width: 0; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sx-bar .sx-live-on i { flex: none; }
+@media (max-width: 520px) { .sx-bar { gap: 5px; padding: 0 10px; } .sx-bar .sx-url { font-size: 10.5px; padding: 0 8px; } }

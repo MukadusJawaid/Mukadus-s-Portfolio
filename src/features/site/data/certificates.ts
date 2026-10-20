@@ -2,9 +2,9 @@
 export type Certificate = { title: string; issuer: string; when: string; image: string };
 
 export const certificates: Certificate[] = [
+  { title: "Women Tech Quest 2026: Build with AI", issuer: "10Pearls", when: "Oct 2026", image: "/certs/wtq-2026.jpg" },
   { title: "Bachelor of Science in Software Engineering", issuer: "Sir Syed University (SSUET)", when: "Apr 2024", image: "/certs/ssuet-bs-degree.jpg" },
   { title: "Diploma in Graphics and Web Design (Distinction)", issuer: "Arena Multimedia", when: "Oct 2022", image: "/certs/arena-diploma.jpg" },
-  { title: "Women Tech Quest 2026: Build with AI", issuer: "10Pearls", when: "Oct 2026", image: "/certs/wtq-2026.jpg" },
   { title: "Certificate of Merit: 3rd position, BS Software Engineering", issuer: "Sir Syed University (SSUET)", when: "2024", image: "/certs/ssuet-merit-third.jpg" },
   { title: "Microfest++ Graphic Designing competition", issuer: "Microsoft Student Partners", when: "May 2020", image: "/certs/microfest-graphic-design.jpg" },
   { title: "Adobe Illustrator Portfolio course", issuer: "Buraq", when: "May 2020", image: "/certs/adobe-illustrator.jpg" },

@@ -25,8 +25,16 @@ function useVisibleArea(active: boolean): CSSProperties | undefined {
     body.style.width = "100%";
     const update = () => {
       if (vv.offsetTop > 0 || window.scrollY > 0) window.scrollTo(0, 0);
-      const covered = Math.max(0, window.innerHeight - vv.height - vv.offsetTop); // keyboard height (plus any scroll offset)
-      setStyle({ bottom: covered, height: Math.min(600, Math.round(vv.height * 0.78)), maxHeight: "none" });
+      // Placed from the top of the visible area (so nothing depends on how the browser reports the keyboard): the sheet is as tall as
+      // it wants to be, but never taller than the space above the keyboard, and its bottom edge sits on the keyboard.
+      const h = Math.min(600, Math.round(vv.height * 0.82));
+      setStyle({
+        top: Math.round(vv.offsetTop + vv.height - h - 8),
+        bottom: "auto",
+        height: h,
+        maxHeight: "none",
+        transition: "top .28s cubic-bezier(.22,1,.36,1), height .28s cubic-bezier(.22,1,.36,1), opacity .2s",
+      });
     };
     update();
     vv.addEventListener("resize", update);
