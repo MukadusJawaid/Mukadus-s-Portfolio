@@ -28,7 +28,7 @@ html.has-robot :is(a[href], button:not(:disabled), [role="button"], [role="tab"]
 /* the loading screen of the desk: Pixel floats over a soft glow, and a thin line fills under the name */
 .desk-loader-bot { position: relative; filter: drop-shadow(0 0 22px color-mix(in oklab, var(--ice) 45%, transparent)); }
 .desk-loader-bot svg { display: block; width: 64px; height: auto; overflow: visible; }
-.desk-loader-bar { position: relative; width: 140px; height: 3px; overflow: hidden; border-radius: 3px; background: rgb(255 255 255 / .12); }
+.desk-loader-bar { position: relative; width: 200px; height: 3px; overflow: hidden; border-radius: 3px; background: rgb(255 255 255 / .12); }
 /* the loader's robot floats gently while the desk loads */
 .desk-loader-bot[data-awake] .bd-eyes { animation: none; }
 .desk-loader-bot { animation: desk-float 3.2s ease-in-out infinite; }
@@ -37,6 +37,7 @@ html.has-robot :is(a[href], button:not(:disabled), [role="button"], [role="tab"]
 @media (prefers-reduced-motion: reduce) { .desk-loader-bot { animation: none; } }
 .desk-loader-bar { transition: opacity .3s; }
 .desk-loader-bar i { position: absolute; inset: 0; border-radius: 3px; background: var(--ice); transform-origin: left; transform: scaleX(.04); }
+.desk-loader-bar i { transition: transform .25s ease-out; }
 .desk-loader-bar i.run { animation: desk-run 6s cubic-bezier(.12, .7, .25, 1) forwards; }
 @keyframes desk-run { from { transform: scaleX(.04); } to { transform: scaleX(.94); } }
 @media (prefers-reduced-motion: reduce) { .desk-loader-bar i.run { animation: none; transform: scaleX(.5); } }

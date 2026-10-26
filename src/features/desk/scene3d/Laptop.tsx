@@ -20,7 +20,7 @@ const POPOVER_DELAY = 0.15;
  */
 const NONE: Hit = { t: "none" };
 
-const LEVELS = [0.5, 0.75, 1, 1.5, 2, 2.5];
+const LEVELS = [0.5, 0.75, 1, 1.5, 2];
 
 /**
  * A canvas of 1280x800 pixels times `f`, and the texture that shows it. A size change always makes a brand new
@@ -54,7 +54,7 @@ export function Laptop() {
   const group = useRef<THREE.Group>(null);
 
   /** the canvas the screen is drawn on (created with the model; its size follows how big the screen appears) */
-  const lod = useRef({ f: 1, candidate: 1, seen: 0, frame: 0 });
+  const lod = useRef({ f: 1, candidate: 1, seen: 0, frame: 0, cache: new Map<number, ReturnType<typeof screenTexture>>() });
   const probe = useMemo(() => [new THREE.Vector3(), new THREE.Vector3()], []);
   const surface = useRef<{ c: HTMLCanvasElement; g: CanvasRenderingContext2D } | null>(null);
   const tex = useRef<THREE.CanvasTexture | null>(null);
@@ -138,6 +138,8 @@ export function Laptop() {
       if (far !== !!view.current.far) {
         view.current.far = far;
         view.current.wake = far ? undefined : 0;
+        if (far) screenMat.current?.color.setScalar(1);
+        else screenMat.current?.color.setScalar(0);
         wakeFrom.current = clock.elapsedTime;
         dirty.current = true;
       }
@@ -149,11 +151,15 @@ export function Laptop() {
       else if (best === L.candidate && ++L.seen >= (early || best > L.f ? 1 : 2) && screenMat.current) {
         L.f = best;
         L.seen = 0;
-        const next = screenTexture(best, fit.current.rx);
-        gl.initTexture(next.texture);
+        // each size is made once and kept: going back and forth while zooming only swaps the picture, with no new upload.
+        // (Swapping a texture on the same material needs no shader rebuild either, which would freeze a frame.)
+        let next = L.cache.get(best);
+        if (!next) {
+          next = screenTexture(best, fit.current.rx);
+          gl.initTexture(next.texture);
+          L.cache.set(best, next);
+        }
         screenMat.current.map = next.texture;
-        screenMat.current.needsUpdate = true;
-        tex.current?.dispose();
         surface.current = next;
         tex.current = next.texture;
         dirty.current = true;
@@ -166,8 +172,9 @@ export function Laptop() {
     const s = useDeskStore.getState();
     const v = view.current;
     if (v.wake !== undefined && v.wake < 1) {
+      // waking up fades the picture in from black by dimming the material, which is free (redrawing the whole canvas every frame is not)
       v.wake = Math.min(1, (clock.elapsedTime - wakeFrom.current) / 0.7);
-      dirty.current = true;
+      screenMat.current?.color.setScalar(v.wake * v.wake);
     }
     if (v.hoverIcon > 0 && !v.popover && s.ch === 0 && clock.elapsedTime - hoverSince.current > POPOVER_DELAY) {
       v.popover = true;

@@ -3,13 +3,14 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { TransitionLink } from "@/features/transition/TransitionLink";
-import { ArrowLeft, Globe, Minus, Plus, ScanSearch, SquareTerminal } from "lucide-react";
+import { ArrowLeft, Globe, WifiOff, Minus, Plus, ScanSearch, SquareTerminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { folders } from "../data/folders";
 import { RobotBody } from "@/features/robot/Robot";
 import { DeskBuddy } from "./DeskBuddy";
 import { useStartOnInteraction } from "../lib/useStartOnInteraction";
+import { useModelDownload } from "../lib/useModelDownload";
 import { useStageInsets } from "../lib/insets";
 import { folderTone } from "../lib/tone";
 import { useDeskStore } from "../store/useDeskStore";
@@ -34,7 +35,10 @@ export function StagePanel({ className = "" }: { className?: string }) {
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   // the scene starts the moment a visitor moves, taps or types (see useStartOnInteraction)
-  const mount3d = useStartOnInteraction();
+  const started = useStartOnInteraction();
+  // once someone is here, the files download first (with a real progress bar), then the scene starts with them already in hand
+  const dl = useModelDownload(started);
+  const mount3d = started && dl.done;
   const cur = folders[ch];
   const f = file >= 0 ? cur.files[file] : null;
   const overview = ch === 0;
@@ -60,17 +64,29 @@ export function StagePanel({ className = "" }: { className?: string }) {
           {/* the loading line: it fills steadily (a compositor animation, so it keeps moving even while the page is busy setting up the
               scene) and runs the rest of the way when the files have all arrived */}
           {/* the loading line appears when the scene starts loading */}
-          {/* before the scene starts: a gentle prompt (it starts on the first move or tap); once it starts, the loading line takes its place */}
-          {!mount3d && (
+          {/* before anyone arrives: a gentle prompt. Then a bar with the real download of the 3D files, a warning when the network is
+              slow, and finally a moving line while the scene sets itself up. */}
+          {!started ? (
             <p className="desk-hint mt-1 inline-flex items-center gap-2 font-mono text-xs text-white/60">
               <span className="desk-hint-dot" aria-hidden />
               <span className="[@media(pointer:coarse)]:hidden">Move your mouse to wake the desk</span>
               <span className="hidden [@media(pointer:coarse)]:inline">Tap anywhere to wake the desk</span>
             </p>
+          ) : (
+            <div className="mt-1 flex flex-col items-center gap-2">
+              <span className="desk-loader-bar" role="progressbar" aria-label="Loading the 3D desk" aria-valuemin={0} aria-valuemax={100} aria-valuenow={dl.progress}>
+                {dl.done ? <i className="run" /> : <i style={{ transform: `scaleX(${Math.max(0.04, dl.progress / 100)})` }} />}
+              </span>
+              <p className="font-mono text-xs text-white/60">
+                {dl.done ? "Setting up the desk…" : `Loading the 3D desk ${dl.progress}%`}
+              </p>
+              {dl.slow && !dl.done && (
+                <p className="desk-slow inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 font-sans text-xs text-amber-100" role="status">
+                  <WifiOff className="size-3.5" aria-hidden /> Your network is slow right now, so this may take a little longer
+                </p>
+              )}
+            </div>
           )}
-          <span className="desk-loader-bar mt-2" aria-label="Loading the 3D desk" style={{ opacity: mount3d ? 1 : 0, display: mount3d ? undefined : "none" }}>
-            <i className={mount3d ? "run" : undefined} />
-          </span>
         </div>
       )}
 

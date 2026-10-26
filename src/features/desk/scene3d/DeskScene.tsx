@@ -116,8 +116,8 @@ export default function DeskScene({ onReady, onFail }: Props) {
     <Boundary onFail={onFail}>
       <Canvas
         shadows
-        // full device resolution (up to 2x) all the time: lowering it while the camera moves is what made the screen blur
-        dpr={[1, 2]}
+        // up to 1.5x resolution, steady (the screen text is drawn on its own sharp canvas, so it does not depend on this; a full 2x on a high-density display costs a lot of graphics time and shows as stutter while zooming)
+        dpr={[1, 1.5]}
         camera={{ fov: cam.fov, position: [0, 4, 11], near: 0.1, far: 80 }}
         gl={{ antialias: true, powerPreference: "high-performance", toneMappingExposure: 1.05 }}
         className="!absolute inset-0 cursor-grab active:cursor-grabbing"

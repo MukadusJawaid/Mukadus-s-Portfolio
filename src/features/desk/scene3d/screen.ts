@@ -450,10 +450,5 @@ export function drawScreen(g: CanvasRenderingContext2D, folders: Folder[], v: Sc
   menuBar(g);
   if (v.ch === 0) overview(g, folders, v);
   else windowView(g, folders, v);
-  // waking up: the picture fades in from black, like a computer coming out of sleep
-  if (v.wake !== undefined && v.wake < 1) {
-    g.fillStyle = `rgba(0,0,0,${1 - v.wake * v.wake})`;
-    g.fillRect(0, 0, SW, SH);
-  }
   g.textAlign = "left";
 }
