@@ -303,6 +303,12 @@ export function Website() {
     addEventListener("resize", onResizeEdu);
     document.fonts?.ready.then(measureEdu);
     window.addEventListener("load", measureEdu);
+    // Whatever changes an entry's height later (a font arriving, an image or the certificate slider loading, text wrapping differently
+    // on this phone) re-fits the window around the entry on show, so its content can never be cut off.
+    const watchEdu = new ResizeObserver(() => {
+      if (small.matches) sizeStage(Math.max(0, eduAct));
+    });
+    eduCards.forEach((c) => watchEdu.observe(c));
 
     const setAct = (i: number) => {
       if (i === act) return;
@@ -532,6 +538,7 @@ export function Website() {
       removeEventListener("scroll", onScroll);
       removeEventListener("resize", frame);
       removeEventListener("resize", onResizeEdu);
+      watchEdu.disconnect();
       window.removeEventListener("load", measureEdu);
       rail.forEach((b, i) => b.removeEventListener("click", onRail[i]));
       eduTabs.forEach((b, i) => b.removeEventListener("click", onEdu[i]));
