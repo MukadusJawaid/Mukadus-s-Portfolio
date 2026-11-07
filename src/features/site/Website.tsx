@@ -257,6 +257,12 @@ export function Website() {
     let steadyW = 0;
     let steadyH = 0;
     const sizeStage = (i: number) => {
+      // measure the entry now (not only at load): its real height is only known once it has been laid out on this device
+      const card = eduCards[i];
+      if (card && small.matches) {
+        natural[i] = card.scrollHeight;
+        overs[i] = Math.max(0, natural[i] + 12 - room);
+      }
       if (eduStage) eduStage.style.height = `${Math.min(room, Math.max(120, (natural[i] ?? 0) + 12))}px`;
     };
     const measureEdu = () => {

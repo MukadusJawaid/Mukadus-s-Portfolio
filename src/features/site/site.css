@@ -84,8 +84,8 @@
 .sx-band { position: relative; padding: 120px 0; border-top: 1px solid var(--line); overflow: clip; }
 .sx-band.alt { background: var(--alt); }
 .sx-band#contact { padding-bottom: 48px; }
-/* sections far below the first screen are not laid out or painted until they come near, which keeps the first load light (the project stack and pinned experience are left out because they rely on sticky positioning) */
-#skills.sx-band, #education.sx-band, #about.sx-band, #contact.sx-band { content-visibility: auto; contain-intrinsic-size: auto 760px; }
+/* sections far below the first screen are not laid out or painted until they come near, which keeps the first load light (the project stack, pinned experience and education are left out: they rely on sticky positioning and measure their own text, and a skipped section reports its text as having no height) */
+#skills.sx-band, #about.sx-band, #contact.sx-band { content-visibility: auto; contain-intrinsic-size: auto 760px; }
 .sx-band::before, .sx-exp::before {
   content: ""; position: absolute; left: 50%; top: -1px; width: 260px; height: 1px; transform: translateX(-50%);
   background: linear-gradient(90deg, transparent, var(--acc), transparent); opacity: .8; z-index: 2;
