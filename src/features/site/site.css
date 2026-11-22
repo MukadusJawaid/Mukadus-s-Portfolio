@@ -914,14 +914,15 @@ html:has(.sx) { scroll-behavior: smooth; scroll-padding-top: 72px; }
 @media (max-width: 768px) { .sx-lede { margin-inline: auto; } }
 
 /* short screens (laptops around 700px tall): the stacked cards stay, but each one is made compact enough to fit under the
-   header, so its whole content can be read while it is pinned. On very short screens they simply follow each other down. */
+   header, so its whole content can be read while it is pinned. Only below 520px of window height do they simply follow each other down. */
 @media (min-width: 993px) and (max-height: 800px) {
   .sx-card { top: calc(84px + min(var(--i), 4) * 10px); padding: 12px 12px 16px; }
   .sx-card .sx-shot { height: clamp(150px, 32vh, 250px); }
   .sx-card .sx-pbody { padding-top: 12px; }
   .sx-card .sx-story { display: none; }
 }
-@media (min-width: 993px) and (max-height: 640px) { .sx-card { position: relative; top: auto; } }
+/* only on truly tiny windows (under 520px tall, where even a compact card cannot fit under the header) do the cards follow each other down the page */
+@media (min-width: 993px) and (max-height: 520px) { .sx-card { position: relative; top: auto; } }
 
 /* certificates tab: a grid of small previews, each with its title and who gave it */
 .sx-certs { list-style: none; margin: 24px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
